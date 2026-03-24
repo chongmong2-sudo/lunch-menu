@@ -40,7 +40,7 @@
         .vote-count { display: block; font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 700; }
         input[type="radio"] { cursor: pointer; transform: scale(1.2); accent-color: var(--primary); }
         .detail-panel { flex-shrink: 0; background: white; border-top: 2px solid var(--primary); overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s; opacity: 0; }
-        .detail-panel.open { max-height: 480px; opacity: 1; }
+        .detail-panel.open { max-height: 520px; opacity: 1; }
         .detail-inner { padding: 16px 18px 18px; }
         .detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
         .detail-name { font-size: 17px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.3; }
@@ -60,13 +60,13 @@
         .naver-btn:hover { background: #02a84a; }
         .naver-btn.menu-btn { background: #FF6B35; }
         .naver-btn.menu-btn:hover { background: #e55a28; }
+        
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-        /* 커서 모양을 drag(grab) 스타일로 변경 */
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: grab; transition: all 0.18s; white-space: nowrap; color: var(--text); font-family: 'Noto Sans KR', sans-serif; }
-        .custom-marker:active { cursor: grabbing; }
-        .custom-marker:hover, .custom-marker.active { background: var(--primary); color: white; transform: scale(1.08); box-shadow: 0 4px 12px rgba(74,144,226,0.4); }
-        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 13px; font-size: 13px; font-weight: 700; box-shadow: 0 3px 10px rgba(231,76,60,0.5); white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+        /* 드래그 충돌 방지를 위해 user-select 해제 */
+        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.18s; white-space: nowrap; color: var(--text); user-select: none; -webkit-user-drag: none; }
+        .custom-marker:hover, .custom-marker.active { background: var(--primary); color: white; transform: scale(1.08); box-shadow: 0 4px 12px rgba(74,144,226,0.4); z-index: 1000 !important; }
+        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 13px; font-size: 13px; font-weight: 700; box-shadow: 0 3px 10px rgba(231,76,60,0.5); white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -115,6 +115,9 @@
                     <div class="detail-menu-label">🍽 메뉴</div>
                     <div class="menu-tags" id="d-menus"></div>
                 </div>
+                <div class="btn-row" style="margin-bottom: 8px;">
+                    <button class="naver-btn" id="d-edit-pos-btn" style="background: #f39c12;">📍 지도 클릭해서 위치 수정하기</button>
+                </div>
                 <div class="btn-row">
                     <a class="naver-btn" id="d-naver-link" href="#" target="_blank">🗺 네이버 지도</a>
                     <a class="naver-btn menu-btn" id="d-menu-link" href="#" target="_blank">📋 메뉴판 보기</a>
@@ -126,11 +129,9 @@
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
-    // 아스크타워 기준점
     const ASKTOWER_LAT = 37.48104;
     const ASKTOWER_LNG = 126.88261;
 
-    // 데이터를 갱신할 수 있도록 const 대신 let 사용
     let restaurants = [
         { name: "얌얌한식뷔페",         menu: "한식뷔페",                  category: "뷔페",        distance: "10m",  rating: "83.75", phone: "010-5453-1253", placeId: "2038586814", lat: 37.48120, lng: 126.88270 },
         { name: "무스탕키친",           menu: "커리",                      category: "인도네팔",    distance: "10m",  rating: "82",    phone: "0507-1315-4575", placeId: "2145572206", lat: 37.48118, lng: 126.88265 },
@@ -196,23 +197,27 @@
 
     const employees = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
     let activeMarkerEl = null;
+    
+    // 위치 수정 관련 상태 관리 변수
+    let editingRestaurant = null;
+    let editingMarker = null;
 
-    // 로컬 스토리지에 저장된 좌표가 있다면 불러와서 병합
     const savedData = localStorage.getItem('adjusted_restaurant_locations');
     if (savedData) {
         try {
             const parsedData = JSON.parse(savedData);
             restaurants.forEach(r => {
                 const saved = parsedData.find(p => p.name === r.name);
-                if (saved) {
-                    r.lat = saved.lat;
-                    r.lng = saved.lng;
-                }
+                if (saved) { r.lat = saved.lat; r.lng = saved.lng; }
             });
-        } catch(e) { console.error("데이터 로드 실패:", e); }
+        } catch(e) {}
     }
 
-    // 직선거리 계산 (미터)
+    function saveLocationsToLocal() {
+        const saveArray = restaurants.map(r => ({ name: r.name, lat: r.lat, lng: r.lng }));
+        localStorage.setItem('adjusted_restaurant_locations', JSON.stringify(saveArray));
+    }
+
     function calcDistance(lat1, lng1, lat2, lng2) {
         const R = 6371000;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -232,8 +237,7 @@
         restaurants.forEach(r => {
             selects.forEach(sel => {
                 const opt = document.createElement('option');
-                opt.value = r.name;
-                opt.text = `[${r.category}] ${r.name}`;
+                opt.value = r.name; opt.text = `[${r.category}] ${r.name}`;
                 sel.appendChild(opt);
             });
         });
@@ -261,12 +265,9 @@
     }
 
     function resetMenus() {
-        if (confirm("선택된 메뉴와 투표 내역을 모두 초기화하시겠습니까?")) {
+        if (confirm("초기화하시겠습니까?")) {
             ['menu1','menu2','menu3'].forEach(id => document.getElementById(id).value = "");
-            updateTableHeaders();
-            initEmployeeList();
-            countVotes();
-            closeDetail();
+            updateTableHeaders(); initEmployeeList(); countVotes(); closeDetail();
         }
     }
 
@@ -284,58 +285,56 @@
             zoom: 16
         });
 
-        // 🏢 아스크타워 마커
         new naver.maps.Marker({
             position: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
             map,
-            icon: {
-                content: '<div class="home-marker">🏢 아스크타워</div>',
-                anchor: new naver.maps.Point(55, 15)
-            },
+            icon: { content: '<div class="home-marker">🏢 아스크타워</div>', anchor: new naver.maps.Point(55, 15) },
             zIndex: 100
         });
 
-        // 식당 마커 생성
         restaurants.forEach(rest => {
-            const position = new naver.maps.LatLng(rest.lat, rest.lng);
             const markerDiv = document.createElement('div');
             markerDiv.className = 'custom-marker';
             markerDiv.innerText = '📍 ' + rest.name;
 
             const marker = new naver.maps.Marker({
-                position, 
+                position: new naver.maps.LatLng(rest.lat, rest.lng), 
                 map,
-                icon: { content: markerDiv, anchor: new naver.maps.Point(60, 15) },
-                draggable: true // 마커 드래그 활성화
+                icon: { content: markerDiv, anchor: new naver.maps.Point(60, 15) }
             });
 
-            // 클릭 이벤트 (상세 정보 오픈)
             naver.maps.Event.addListener(marker, 'click', function() {
-                map.panTo(marker.getPosition()); // 현재 좌표 기준 이동
+                map.panTo(marker.getPosition());
                 openDetail(rest, markerDiv, marker);
-            });
-
-            // 드래그 종료 이벤트 (좌표 저장)
-            naver.maps.Event.addListener(marker, 'dragend', function() {
-                const newPos = marker.getPosition();
-                rest.lat = newPos.lat();
-                rest.lng = newPos.lng();
-
-                // 직선거리 재계산 후 객체에 업데이트
-                rest.distance = Math.round(calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, rest.lat, rest.lng)) + "m";
-
-                // 디테일 패널이 열려있다면 거리 정보 즉시 업데이트
-                if (activeMarkerEl === markerDiv) {
-                    document.getElementById('d-distance').innerText = `약 ${rest.distance} (직선)`;
-                }
-
-                // 로컬 스토리지에 저장
-                const saveArray = restaurants.map(r => ({ name: r.name, lat: r.lat, lng: r.lng }));
-                localStorage.setItem('adjusted_restaurant_locations', JSON.stringify(saveArray));
             });
         });
 
-        naver.maps.Event.addListener(map, 'click', closeDetail);
+        // 🚨 지도 클릭 시: 위치 수정 모드일 때 좌표 이동 처리
+        naver.maps.Event.addListener(map, 'click', function(e) {
+            if (editingRestaurant && editingMarker) {
+                // 새로운 위도, 경도 적용
+                editingRestaurant.lat = e.coord.lat();
+                editingRestaurant.lng = e.coord.lng();
+                
+                // 마커 실시간 이동
+                editingMarker.setPosition(e.coord);
+                
+                // 거리 재계산 및 텍스트 갱신
+                const dist = calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, e.coord.lat(), e.coord.lng());
+                document.getElementById('d-distance').innerText = `약 ${dist}m (직선)`;
+                
+                // 로컬 저장
+                saveLocationsToLocal();
+                
+                alert(`✅ [${editingRestaurant.name}] 마커 위치가 이동되었습니다!\n우측 상단의 '위치 데이터 복사'를 눌러 원본 코드를 업데이트하세요.`);
+                
+                // 수정 모드 종료
+                editingRestaurant = null;
+                editingMarker = null;
+            } else {
+                closeDetail();
+            }
+        });
     }
 
     function openDetail(rest, markerEl, markerObj) {
@@ -343,44 +342,50 @@
         activeMarkerEl = markerEl;
         markerEl.classList.add('active');
 
+        // 다른 마커 클릭 시 수정 모드 초기화
+        editingRestaurant = null;
+        editingMarker = null;
+
         document.getElementById('d-name').innerText = rest.name;
         document.getElementById('d-rating').innerText = rest.rating !== '-' ? `★ ${rest.rating}점` : '평점 정보 없음';
         document.getElementById('d-category').innerText = rest.category;
 
-        // 동적으로 현재 마커 위치 기반 거리 재계산 출력
         const currentPos = markerObj.getPosition();
         const dist = calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, currentPos.lat(), currentPos.lng());
         document.getElementById('d-distance').innerText = `약 ${dist}m (직선)`;
-
         document.getElementById('d-phone').innerText = rest.phone !== '-' ? rest.phone : '정보 없음';
 
         const menuContainer = document.getElementById('d-menus');
         menuContainer.innerHTML = '';
         rest.menu.split(',').map(m => m.trim()).forEach(m => {
-            const tag = document.createElement('span');
-            tag.className = 'menu-tag';
-            tag.innerText = m;
+            const tag = document.createElement('span'); tag.className = 'menu-tag'; tag.innerText = m;
             menuContainer.appendChild(tag);
         });
 
         document.getElementById('d-naver-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}`;
         document.getElementById('d-menu-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}/menu/list`;
 
+        // 위치 수정 버튼 클릭 이벤트 연동
+        document.getElementById('d-edit-pos-btn').onclick = function() {
+            editingRestaurant = rest;
+            editingMarker = markerObj;
+            alert(`📌 [${rest.name}] 위치 수정 모드입니다.\n\n지도에서 마커를 옮기고 싶은 곳을 클릭해주세요!`);
+        };
+
         const panel = document.getElementById('detail-panel');
         panel.classList.add('open');
-        setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
     }
 
     function closeDetail() {
         document.getElementById('detail-panel').classList.remove('open');
         if (activeMarkerEl) { activeMarkerEl.classList.remove('active'); activeMarkerEl = null; }
+        editingRestaurant = null;
+        editingMarker = null;
     }
 
-    // 개발자용: 변경된 데이터 복사 기능
     function copyUpdatedData() {
         const dataString = JSON.stringify(restaurants, null, 8);
         const formatString = `const restaurants = ${dataString};\n\n// 위 코드를 복사해서 기존 코드의 restaurants 배열 부분에 덮어씌우세요.`;
-        
         navigator.clipboard.writeText(formatString).then(() => {
             alert("✅ 마커 이동이 반영된 데이터가 클립보드에 복사되었습니다!\n에디터에서 기존 restaurants 배열에 붙여넣기(Ctrl+V) 하세요.");
         }).catch(err => {
