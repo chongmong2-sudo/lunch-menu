@@ -34,11 +34,11 @@
         .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; }
         .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 700; }
 
-        /* [추가] 마우스 커서 정보창 (커서 따라다님) */
+        /* 마우스 커서 팝업 */
         #cursor-popup {
-            position: fixed; display: none; background: rgba(33, 37, 41, 0.95); color: white;
-            padding: 12px; border-radius: 8px; font-size: 12px; z-index: 10000; pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4); min-width: 160px; border: 1px solid rgba(255,255,255,0.1);
+            position: fixed; display: none; background: rgba(33, 37, 41, 0.9); color: white;
+            padding: 10px; border-radius: 6px; font-size: 12px; z-index: 9999; pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-width: 140px;
         }
     </style>
 </head>
@@ -80,6 +80,7 @@
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
+    // Firebase 설정
     const firebaseConfig = {
         apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q",
         authDomain: "lunch-menu-3c36c.firebaseapp.com",
@@ -96,77 +97,78 @@
     const employees = ["김미연", "김학종", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임효준", "장현진"];
 
     let map;
-    const cursorPopup = document.getElementById('cursor-popup');
-    const infoWindow = new naver.maps.InfoWindow(); // [복구] 클릭용 정보창
+    const cPopup = document.getElementById('cursor-popup');
+    const infoWindow = new naver.maps.InfoWindow({ anchorSkew: true });
 
     window.onload = function() {
         initDropdowns();
-        initMap();
+        initMap(); // 지도는 한 번만 로드
         db.ref('lunch_vote').on('value', snap => updateUI(snap.val() || {}));
     };
 
     function initDropdowns() {
         const selects = ['menu1','menu2','menu3'].map(id => document.getElementById(id));
         restaurants.forEach(r => {
-            selects.forEach(sel => {
-                const opt = new Option(`[${r.category}] ${r.name}`, r.name);
-                sel.add(opt);
-            });
+            selects.forEach(sel => sel.add(new Option(`[${r.category}] ${r.name}`, r.name)));
         });
     }
 
     function initMap() {
-        map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.4767424, 126.8897311), zoom: 17 });
+        const center = new naver.maps.LatLng(37.4767424, 126.8897311);
+        map = new naver.maps.Map('map', { center: center, zoom: 17 });
         
-        // 아스크타워
+        // 아스크타워 본부 마커
         new naver.maps.Marker({
-            position: new naver.maps.LatLng(37.4767424, 126.8897311),
-            map: map, icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
+            position: center,
+            map: map,
+            icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
         });
 
+        // 식당 마커들 생성
         restaurants.forEach(r => {
+            const mPos = new naver.maps.LatLng(r.lat, r.lng);
             const marker = new naver.maps.Marker({
-                position: new naver.maps.LatLng(r.lat, r.lng),
-                map: map, icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
+                position: mPos,
+                map: map,
+                icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
             });
 
-            // 1. [추가된 기능] 마우스 커서 따라다니는 팝업
-            naver.maps.Event.addListener(marker, 'mouseover', () => cursorPopup.style.display = 'block');
-            naver.maps.Event.addListener(marker, 'mousemove', (e) => {
-                const pointer = e.originalEvent;
-                cursorPopup.style.left = (pointer.clientX + 20) + 'px';
-                cursorPopup.style.top = (pointer.clientY + 10) + 'px';
-                cursorPopup.innerHTML = `
-                    <div style="font-weight:700; color:#FFD700; margin-bottom:5px;">${r.name}</div>
-                    <div><span style="color:#aaa;">종류:</span> ${r.category}</div>
-                    <div><span style="color:#aaa;">메뉴:</span> ${r.menu}</div>
-                    <div><span style="color:#aaa;">거리:</span> ${r.distance}</div>
-                `;
-            });
-            naver.maps.Event.addListener(marker, 'mouseout', () => cursorPopup.style.display = 'none');
-
-            // 2. [복구된 기능] 마커 클릭 시 정보창 띄우기 (기존 기능)
-            naver.maps.Event.addListener(marker, 'click', () => {
-                const contentString = `
-                    <div style="padding:10px; min-width:150px; line-height:1.5;">
-                        <h4 style="margin:0 0 5px 0;">${r.name}</h4>
-                        <p style="margin:0; font-size:12px;">종류: ${r.category}<br>추천: ${r.menu}<br>거리: ${r.distance}</p>
+            // 클릭 시 정보창 (기존 기능 유지)
+            naver.maps.Event.addListener(marker, "click", () => {
+                const content = `
+                    <div style="padding:10px; min-width:140px; font-size:13px; line-height:1.4;">
+                        <b style="color:#4A90E2;">${r.name}</b><br>
+                        🍱 ${r.menu}<br>
+                        📍 ${r.category} | ${r.distance}
                     </div>`;
-                infoWindow.setContent(contentString);
+                infoWindow.setContent(content);
                 infoWindow.open(map, marker);
             });
+
+            // 마우스 커서 팝업 (추가된 기능)
+            naver.maps.Event.addListener(marker, 'mouseover', () => { cPopup.style.display = 'block'; });
+            naver.maps.Event.addListener(marker, 'mousemove', (e) => {
+                const ev = e.originalEvent;
+                cPopup.style.left = (ev.clientX + 15) + 'px';
+                cPopup.style.top = (ev.clientY + 15) + 'px';
+                cPopup.innerHTML = `<b>${r.name}</b><br><span style="color:#ddd; font-size:11px;">${r.category} · ${r.distance}</span>`;
+            });
+            naver.maps.Event.addListener(marker, 'mouseout', () => { cPopup.style.display = 'none'; });
         });
     }
 
     function updateUI(data) {
+        // 메뉴 설정 업데이트 (지도는 건드리지 않음)
         for(let i=1; i<=3; i++) {
             const val = data[`menu${i}`] || "";
             document.getElementById(`menu${i}`).value = val;
             document.getElementById(`th-menu${i}`).innerText = val || `메뉴 ${i}`;
         }
+
         const tbody = document.getElementById('employee-list');
         tbody.innerHTML = '';
         let counts = { 1: 0, 2: 0, 3: 0 };
+
         employees.forEach((emp, i) => {
             const v = data[`vote_${i}`] || 0;
             if(v > 0) counts[v]++;
@@ -174,13 +176,20 @@
             tr.innerHTML = `<td>${emp}</td>` + [1,2,3].map(n => `<td><input type="radio" name="v_${i}" ${v==n?'checked':''} onclick="sendVote(${i}, ${n})"></td>`).join('');
             tbody.appendChild(tr);
         });
+
         [1,2,3].forEach(n => document.getElementById(`count${n}`).innerText = `(${counts[n]}명)`);
     }
 
-    function syncMenus() { db.ref('lunch_vote').update({ menu1: document.getElementById('menu1').value, menu2: document.getElementById('menu2').value, menu3: document.getElementById('menu3').value }); }
+    function syncMenus() { 
+        db.ref('lunch_vote').update({ 
+            menu1: document.getElementById('menu1').value, 
+            menu2: document.getElementById('menu2').value, 
+            menu3: document.getElementById('menu3').value 
+        }); 
+    }
     function sendVote(idx, val) { db.ref('lunch_vote').update({ [`vote_${idx}`]: val }); }
-    function resetAllData() { if(confirm("초기화할까요?")) db.ref('lunch_vote').set(null); }
-    function copyUpdatedData() { navigator.clipboard.writeText(JSON.stringify(restaurants, null, 2)).then(() => alert("복사 완료!")); }
+    function resetAllData() { if(confirm("데이터를 초기화할까요?")) db.ref('lunch_vote').set(null); }
+    function copyUpdatedData() { navigator.clipboard.writeText(JSON.stringify(restaurants, null, 2)).then(() => alert("복사되었습니다!")); }
 </script>
 </body>
 </html>
