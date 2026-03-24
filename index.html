@@ -6,406 +6,193 @@
     <title>오늘 점심 뭐 먹지?</title>
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x&callback=initApp"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-        :root {
-            --primary: #4A90E2;
-            --primary-dark: #2c6fba;
-            --danger: #e74c3c;
-            --bg: #F4F7F6;
-            --border: #E0E0E0;
-            --text: #222;
-            --text-muted: #888;
-            --green: #03C75A;
-            --panel-width: 400px;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
-        .left-panel { width: var(--panel-width); background: white; box-shadow: 2px 0 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; z-index: 10; }
-        .header { padding: 16px 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0; }
-        .header .btn-copy { background: var(--green); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700; transition: background 0.2s;}
-        .header .btn-copy:hover { background: #02a84a; }
-        .scroll-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-        .section { padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .section-title { font-size: 14px; font-weight: 700; }
-        .btn-reset { background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: inherit; }
-        .btn-reset:hover { background: #c0392b; }
-        .menu-slot { display: flex; align-items: center; margin-bottom: 8px; }
-        .menu-slot span { font-weight: 700; width: 52px; color: var(--primary); font-size: 13px; }
-        .menu-slot select { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fafafa; color: var(--text); cursor: pointer; }
-        .menu-slot select:focus { outline: none; border-color: var(--primary); }
-        .voting-table { width: 100%; border-collapse: collapse; }
-        .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 7px 4px; text-align: center; font-size: 12px; }
-        .voting-table th { background: #f5f5f5; font-weight: 700; }
-        .vote-count { display: block; font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 700; }
-        input[type="radio"] { cursor: pointer; transform: scale(1.2); accent-color: var(--primary); }
-        .detail-panel { flex-shrink: 0; background: white; border-top: 2px solid var(--primary); overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s; opacity: 0; }
-        .detail-panel.open { max-height: 520px; opacity: 1; }
-        .detail-inner { padding: 16px 18px 18px; }
-        .detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .detail-name { font-size: 17px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.3; }
-        .detail-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); padding: 0 0 0 8px; line-height: 1; }
-        .detail-close:hover { color: var(--danger); }
-        .detail-rating { font-size: 13px; color: #f39c12; font-weight: 700; margin-bottom: 10px; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
-        .detail-item { background: #f8f9fa; border-radius: 8px; padding: 8px 10px; }
-        .detail-item-label { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .detail-item-value { font-size: 12px; color: var(--text); font-weight: 500; }
-        .detail-menu-section { margin-bottom: 12px; }
-        .detail-menu-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-        .menu-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-        .menu-tag { background: #EEF5FF; color: var(--primary-dark); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; }
-        .btn-row { display: flex; gap: 8px; }
-        .naver-btn { flex: 1; display: block; padding: 10px; background: var(--green); color: white; text-align: center; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; transition: background 0.2s; font-family: inherit; border: none; cursor: pointer; }
-        .naver-btn:hover { background: #02a84a; }
-        .naver-btn.menu-btn { background: #FF6B35; }
-        .naver-btn.menu-btn:hover { background: #e55a28; }
+        :root { --primary: #4A90E2; --danger: #e74c3c; --bg: #F4F7F6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body { display: flex; height: 100vh; overflow: hidden; background-color: var(--bg); }
         
+        /* 왼쪽 패널 */
+        .left-panel { width: 450px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; z-index: 10; position: relative; }
+        .header { padding: 20px; background: var(--primary); color: white; text-align: center; font-size: 20px; font-weight: bold; }
+        .content { padding: 20px; overflow-y: auto; flex: 1; }
+        
+        /* 메뉴 선정 */
+        .section-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .menu-slot { display: flex; align-items: center; margin-bottom: 10px; }
+        .menu-slot span { width: 60px; font-weight: bold; }
+        .menu-slot select { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .menu-1 span { color: #e74c3c; } .menu-2 span { color: #8e44ad; } .menu-3 span { color: #d35400; }
+        
+        /* 투표 명단 */
+        .voting-table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: center; }
+        .voting-table th, .voting-table td { border: 1px solid #E0E0E0; padding: 8px; font-size: 14px; }
+        .voting-table th { background: #f9f9f9; }
+        input[type="radio"] { cursor: pointer; transform: scale(1.2); }
+
+        /* 식당 상세 패널 (슬라이드업) */
+        .detail-panel { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 3px solid var(--primary); padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transform: translateY(100%); transition: transform 0.3s ease-in-out; }
+        .detail-panel.show { transform: translateY(0); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #888; }
+        .detail-title { font-size: 20px; color: var(--primary); font-weight: bold; margin-bottom: 5px; }
+        .detail-info { font-size: 14px; color: #555; margin-bottom: 15px; }
+        .btn-group a { display: block; text-align: center; padding: 10px; margin-bottom: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; color: white; }
+        .btn-map { background: #03C75A; } .btn-menu { background: #FF9F00; }
+
+        /* 오른쪽 지도 */
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-        /* 드래그 충돌 방지 */
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.18s; white-space: nowrap; color: var(--text); user-select: none; -webkit-user-drag: none; }
-        .custom-marker:hover, .custom-marker.active { background: var(--primary); color: white; transform: scale(1.08); box-shadow: 0 4px 12px rgba(74,144,226,0.4); z-index: 1000 !important; }
-        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 13px; font-size: 13px; font-weight: 700; box-shadow: 0 3px 10px rgba(231,76,60,0.5); white-space: nowrap; cursor: pointer; user-select: none; }
-        .home-marker:hover { transform: scale(1.05); }
+        
+        /* 마커 스타일 */
+        .marker-base { padding: 4px 10px; border-radius: 20px; background: white; border: 2px solid #666; font-size: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .marker-base:hover { transform: scale(1.1); z-index: 100 !important; }
+        .marker-ask { border-color: #c0392b; background: #e74c3c; color: white; font-size: 14px; }
+        .marker-sel1 { border-color: #c0392b; background: #e74c3c; color: white; }
+        .marker-sel2 { border-color: #8e44ad; background: #9b59b6; color: white; }
+        .marker-sel3 { border-color: #d35400; background: #e67e22; color: white; }
     </style>
 </head>
 <body>
-<div class="left-panel">
-    <div class="header">
-        <span>🍱 오늘 점심 뭐 먹지?</span>
-        <button class="btn-copy" onclick="copyUpdatedData()">💾 위치 데이터 복사</button>
-    </div>
-    <div class="scroll-area">
-        <div class="section">
-            <div class="section-header">
-                <div class="section-title">1. 선착순 메뉴 3개 선점</div>
-                <button class="btn-reset" onclick="resetMenus()">↻ 전체 초기화</button>
-            </div>
-            <div class="menu-slot"><span>메뉴 1</span><select id="menu1" onchange="updateTableHeaders()"><option value="">선택해주세요</option></select></div>
-            <div class="menu-slot"><span>메뉴 2</span><select id="menu2" onchange="updateTableHeaders()"><option value="">선택해주세요</option></select></div>
-            <div class="menu-slot"><span>메뉴 3</span><select id="menu3" onchange="updateTableHeaders()"><option value="">선택해주세요</option></select></div>
-        </div>
-        <div class="section" style="flex:1;">
-            <div class="section-header"><div class="section-title">2. 메뉴 선택 (투표)</div></div>
+
+    <div class="left-panel">
+        <div class="header">🍱 오늘 점심 뭐 먹지?</div>
+        <div class="content">
+            <div class="section-title"><span>1. 선착순 메뉴 3개 선점</span></div>
+            <div class="menu-slot menu-1"><span>🔴 메뉴1</span><select id="sel-menu1" onchange="updateSelection()"><option value="">선택</option></select></div>
+            <div class="menu-slot menu-2"><span>🟣 메뉴2</span><select id="sel-menu2" onchange="updateSelection()"><option value="">선택</option></select></div>
+            <div class="menu-slot menu-3"><span>🟠 메뉴3</span><select id="sel-menu3" onchange="updateSelection()"><option value="">선택</option></select></div>
+
+            <div class="section-title" style="margin-top: 30px;">2. 메뉴 선택 (투표)</div>
             <table class="voting-table">
-                <thead>
-                    <tr>
-                        <th>이름</th>
-                        <th><span id="th-menu1">메뉴 1</span><span class="vote-count" id="count1">(0명)</span></th>
-                        <th><span id="th-menu2">메뉴 2</span><span class="vote-count" id="count2">(0명)</span></th>
-                        <th><span id="th-menu3">메뉴 3</span><span class="vote-count" id="count3">(0명)</span></th>
-                    </tr>
-                </thead>
-                <tbody id="employee-list"></tbody>
+                <thead><tr><th>이름</th><th id="th-m1">메뉴1</th><th id="th-m2">메뉴2</th><th id="th-m3">메뉴3</th></tr></thead>
+                <tbody id="emp-list"></tbody>
             </table>
         </div>
-        <div class="detail-panel" id="detail-panel">
-            <div class="detail-inner">
-                <div class="detail-top">
-                    <div class="detail-name" id="d-name"></div>
-                    <button class="detail-close" onclick="closeDetail()">✕</button>
-                </div>
-                <div class="detail-rating" id="d-rating"></div>
-                <div class="detail-grid">
-                    <div class="detail-item"><div class="detail-item-label">분류</div><div class="detail-item-value" id="d-category"></div></div>
-                    <div class="detail-item"><div class="detail-item-label">아스크타워 기준</div><div class="detail-item-value" id="d-distance"></div></div>
-                    <div class="detail-item" style="grid-column:1/-1;"><div class="detail-item-label">전화</div><div class="detail-item-value" id="d-phone"></div></div>
-                </div>
-                <div class="detail-menu-section">
-                    <div class="detail-menu-label">🍽 메뉴</div>
-                    <div class="menu-tags" id="d-menus"></div>
-                </div>
-                <div class="btn-row" style="margin-bottom: 8px;">
-                    <button class="naver-btn" id="d-edit-pos-btn" style="background: #f39c12;">📍 지도 클릭해서 위치 수정하기</button>
-                </div>
-                <div class="btn-row">
-                    <a class="naver-btn" id="d-naver-link" href="#" target="_blank">🗺 네이버 지도</a>
-                    <a class="naver-btn menu-btn" id="d-menu-link" href="#" target="_blank">📋 메뉴판 보기</a>
-                </div>
+
+        <div id="detail-panel" class="detail-panel">
+            <span class="close-btn" onclick="closeDetail()">✖</span>
+            <div id="detail-title" class="detail-title">식당 이름</div>
+            <div id="detail-dist" class="detail-info">아스크타워에서 거리 계산중...</div>
+            <div class="btn-group">
+                <a id="link-menu" href="#" target="_blank" class="btn-menu">📋 사진/메뉴판 크게 보기</a>
+                <a id="link-map" href="#" target="_blank" class="btn-map">🗺️ 네이버 지도 정보 보기</a>
             </div>
         </div>
     </div>
-</div>
-<div class="right-panel"><div id="map"></div></div>
 
-<script>
-    // 아스크타워 좌표 (수정 가능하게 let으로 변경)
-    let ASKTOWER_LAT = 37.48104;
-    let ASKTOWER_LNG = 126.88261;
+    <div class="right-panel">
+        <div id="map"></div>
+    </div>
 
-    let restaurants = [
-        { name: "얌얌한식뷔페",         menu: "한식뷔페",                  category: "뷔페",        distance: "10m",  rating: "83.75", phone: "010-5453-1253", placeId: "2038586814", lat: 37.48120, lng: 126.88270 },
-        { name: "무스탕키친",           menu: "커리",                      category: "인도네팔",    distance: "10m",  rating: "82",    phone: "0507-1315-4575", placeId: "2145572206", lat: 37.48118, lng: 126.88265 },
-        { name: "도쎄프멕시칸",         menu: "타코, 브리또, 퀘사디아",      category: "남미음식",    distance: "15m",  rating: "85",    phone: "02-3467-4569",  placeId: "1962876645", lat: 37.48098, lng: 126.88248 },
-        { name: "가온담",               menu: "감자탕",                    category: "국, 탕, 찌개", distance: "20m",  rating: "86.5",  phone: "02-3467-4530",  placeId: "2036399312", lat: 37.48085, lng: 126.88275 },
-        { name: "구름산 추어탕",         menu: "추어탕",                    category: "국밥",        distance: "20m",  rating: "88",    phone: "0507-1490-4549", placeId: "2025013395", lat: 37.48130, lng: 126.88255 },
-        { name: "토리키치",             menu: "야키토리동, 쿠시카츠",        category: "일본식 덮밥",  distance: "20m",  rating: "80",    phone: "02-2686-8585",  placeId: "2069800270", lat: 37.48112, lng: 126.88290 },
-        { name: "삼교리동치미막국수",     menu: "막국수, 육개장",            category: "면",          distance: "25m",  rating: "85",    phone: "02-3467-4568",  placeId: "2043678907", lat: 37.48075, lng: 126.88285 },
-        { name: "세븐볶음",             menu: "제육, 오징어 직화볶음",        category: "밥",          distance: "30m",  rating: "85",    phone: "02-3467-4797",  placeId: "2015237914", lat: 37.48135, lng: 126.88240 },
-        { name: "오투닭갈비&부대찌개",     menu: "닭갈비, 부대찌개, 막국수",     category: "고기",        distance: "38m",  rating: "83",    phone: "02-3467-4548",  placeId: "2096471239", lat: 37.48140, lng: 126.88295 },
-        { name: "맛깔참죽 완도미역",       menu: "죽, 뚝배기밥, 덮밥",          category: "죽",          distance: "40m",  rating: "84",    phone: "02-3467-4585",  placeId: "2089583017", lat: 37.48065, lng: 126.88260 },
-        { name: "착한소있소",            menu: "갈비탕, 국밥, 비빔밥",        category: "국, 탕, 찌개", distance: "41m",  rating: "85",    phone: "0507-1446-9299", placeId: "1938160274", lat: 37.48145, lng: 126.88310 },
-        { name: "명자수제돈까스",         menu: "돈까스, 우동",               category: "일식",        distance: "41m",  rating: "88.5",  phone: "0507-1446-6188", placeId: "1119013682", lat: 37.48060, lng: 126.88300 },
-        { name: "용",                  menu: "짜장, 짬뽕, 탕수육",          category: "중식",        distance: "42m",  rating: "89",    phone: "0507-1419-3469", placeId: "1311928970", lat: 37.48155, lng: 126.88230 },
-        { name: "개성손만두요리전문점",     menu: "만두전골, 찐만두",            category: "국, 탕, 찌개", distance: "43m",  rating: "90",    phone: "0507-1439-8886", placeId: "38693015",   lat: 37.48160, lng: 126.88275 },
-        { name: "명가순대국",            menu: "순대국, 감자탕",              category: "국, 탕, 찌개", distance: "50m",  rating: "85",    phone: "070-8259-1235", placeId: "13161100",   lat: 37.48050, lng: 126.88310 },
-        { name: "밥생선구이",            menu: "생선구이, 찌개, 탕, 두루치기",  category: "밥",          distance: "55m",  rating: "80",    phone: "02-853-8776",   placeId: "1077539258", lat: 37.48165, lng: 126.88255 },
-        { name: "춘천옥",              menu: "보쌈정식, 막국수",            category: "밥",          distance: "70m",  rating: "88",    phone: "02-868-9937",   placeId: "187013117",  lat: 37.48170, lng: 126.88285 },
-        { name: "더덕솥뚜껑삼겹살",       menu: "된장, 순두부, 비빔밥, 생선구이", category: "밥",          distance: "84m",  rating: "-",     phone: "02-868-9592",   placeId: "1499785400", lat: 37.48175, lng: 126.88265 },
-        { name: "삼복토종닭도리탕",       menu: "닭도리탕, 동태탕, 알탕, 김치전골", category: "국, 탕, 찌개", distance: "90m", rating: "-",     phone: "0507-1371-0238", placeId: "1322760349", lat: 37.48180, lng: 126.88245 },
-        { name: "민속식당",             menu: "칼국수, 수제비, 보리밥, 냉면",  category: "면",          distance: "100m", rating: "83",    phone: "-",             placeId: "1077459866", lat: 37.47720, lng: 126.88950 },
-        { name: "단정 현대아울렛 가산",     menu: "솥밥",                      category: "밥",          distance: "100m", rating: "86.5",  phone: "010-8838-3987", placeId: "1055353886", lat: 37.47700, lng: 126.88960 },
-        { name: "북창동순두부",          menu: "다양한 한상 차림",            category: "밥",          distance: "100m", rating: "-",     phone: "0507-1363-0269", placeId: "1242504899", lat: 37.47710, lng: 126.88970 },
-        { name: "사월에보리밥과쭈꾸미",     menu: "보리한상, 쭈꾸미한상",        category: "밥, 찌개",    distance: "100m", rating: "90",    phone: "02-2136-9957",  placeId: "1538522840", lat: 37.47695, lng: 126.88980 },
-        { name: "두끼",                menu: "분식 뷔페",                  category: "분식",        distance: "100m", rating: "82.6",  phone: "02-2136-9960",  placeId: "1769151153", lat: 37.47730, lng: 126.88940 },
-        { name: "백초밥",              menu: "초밥",                      category: "일식",        distance: "100m", rating: "-",     phone: "0507-1429-9959", placeId: "2011921726", lat: 37.47685, lng: 126.88990 },
-        { name: "마치다쇼텐 마리오아울렛 본점", menu: "라멘",                  category: "일식",        distance: "100m", rating: "-",     phone: "0507-1321-7493", placeId: "1498991915", lat: 37.47675, lng: 126.89000 },
-        { name: "광화문미진",           menu: "덮밥, 우동, 돈까스, 메밀",    category: "면",          distance: "100m", rating: "-",     phone: "0507-1469-9907", placeId: "1382739399", lat: 37.47665, lng: 126.89010 },
-        { name: "101번지남산돈까스",       menu: "돈까스, 덮밥, 쫄면, 우동",    category: "일식",        distance: "100m", rating: "88",    phone: "02-2136-9958",  placeId: "1336727732", lat: 37.47655, lng: 126.89020 },
-        { name: "니뽕내뽕",             menu: "다양한 짬뽕, 피자, 리조또",     category: "중식",        distance: "100m", rating: "-",     phone: "02-2136-9963",  placeId: "37604881",   lat: 37.47645, lng: 126.89030 },
-        { name: "전주식당",             menu: "백반, 김치찌개, 된장찌개",      category: "밥",          distance: "101m", rating: "-",     phone: "02-853-0302",   placeId: "2140477547", lat: 37.48050, lng: 126.88240 },
-        { name: "보경닭한마리삼계탕",       menu: "닭볶음탕, 삼계탕, 추어탕, 닭개장", category: "국, 탕, 찌개", distance: "105m", rating: "-",   phone: "02-865-8461",   placeId: "38415674",   lat: 37.48040, lng: 126.88225 },
-        { name: "연식당순대국",           menu: "순대국",                    category: "국, 탕, 찌개", distance: "110m", rating: "-",     phone: "0507-1426-5188", placeId: "1957765042", lat: 37.48035, lng: 126.88210 },
-        { name: "역전우동",             menu: "우동, 소바, 돈까스, 덮밥",     category: "일식",        distance: "140m", rating: "-",     phone: "02-862-0101",   placeId: "1263116097", lat: 37.48015, lng: 126.88195 },
-        { name: "한솥도시락 가산센트럴점",   menu: "밥, 까스, 찌개",            category: "밥",          distance: "150m", rating: "-",     phone: "02-855-1117",   placeId: "1090467229", lat: 37.47995, lng: 126.88180 },
-        { name: "싸다김밥가산푸르지오시티점", menu: "김밥, 우동, 분식",            category: "밥",          distance: "170m", rating: "-",     phone: "02-859-8887",   placeId: "1895639193", lat: 37.47975, lng: 126.88165 },
-        { name: "맘스터치 가산센트럴점",    menu: "버거",                      category: "양식",        distance: "190m", rating: "-",     phone: "02-855-7776",   placeId: "1757084493", lat: 37.47955, lng: 126.88150 },
-        { name: "서울막창",             menu: "뚝곱창, 뚝배기, 물/비빔 막국수", category: "밥, 면",      distance: "200m", rating: "-",     phone: "02-808-5837",   placeId: "1795436963", lat: 37.47935, lng: 126.88135 },
-        { name: "마라홀릭 마라탕",        menu: "마라탕",                    category: "국, 탕, 찌개", distance: "210m", rating: "-",     phone: "0507-1381-7539", placeId: "1429342749", lat: 37.47915, lng: 126.88120 },
-        { name: "미분당",               menu: "쌀국수",                    category: "면",          distance: "300m", rating: "91",    phone: "02-855-9841",   placeId: "1665146932", lat: 37.47850, lng: 126.88090 },
-        { name: "정백어가",             menu: "생선구이 정식",              category: "밥",          distance: "300m", rating: "-",     phone: "0507-1322-8522", placeId: "1513961924", lat: 37.47860, lng: 126.88490 },
-        { name: "소요카제 라멘",          menu: "라멘",                      category: "면",          distance: "304m", rating: "84",    phone: "0507-1480-2988", placeId: "1148683048", lat: 37.47840, lng: 126.88075 },
-        { name: "본래순대",             menu: "순대국, 뼈해장국",            category: "국, 탕, 찌개", distance: "305m", rating: "-",     phone: "02-6230-5556",  placeId: "1942838523", lat: 37.47930, lng: 126.88490 },
-        { name: "진케이",               menu: "초밥, 돈까스, 참치 김치찌개",   category: "일식",        distance: "305m", rating: "70",    phone: "02-852-9892",   placeId: "117554783",  lat: 37.47830, lng: 126.88060 },
-        { name: "반마리찜닭애 반찜",       menu: "찜닭, 닭볶음탕",              category: "밥",          distance: "308m", rating: "-",     phone: "-",             placeId: "1517497605", lat: 37.47920, lng: 126.88480 },
-        { name: "본죽&비빔밥",           menu: "다양한 죽",                  category: "죽",          distance: "310m", rating: "-",     phone: "0507-1481-5522", placeId: "1983914774", lat: 37.47910, lng: 126.88470 },
-        { name: "포빈",                menu: "쌀국수, 볶음밥, 분짜",         category: "밥, 면",      distance: "320m", rating: "84",    phone: "0507-1409-2085", placeId: "1288363622", lat: 37.47900, lng: 126.88460 },
-        { name: "보승회관",             menu: "국밥, 냉면",                  category: "밥, 면, 탕", distance: "325m", rating: "-",     phone: "02-6230-6789",  placeId: "1358036124", lat: 37.47890, lng: 126.88450 },
-        { name: "조려당",               menu: "두부조림, 북어국",            category: "면",          distance: "338m", rating: "-",     phone: "02-2085-0127",  placeId: "2089569470", lat: 37.47830, lng: 126.88430 },
-        { name: "소플러스",             menu: "솥밥",                      category: "고기, 찌개",  distance: "340m", rating: "84",    phone: "-",             placeId: "1048995641", lat: 37.47820, lng: 126.88420 },
-        { name: "담소소사골순대육개장",     menu: "순두부, 순대국, 육개장",        category: "국, 탕, 찌개", distance: "340m", rating: "-",   phone: "02-2085-0151",  placeId: "1305970950", lat: 37.47815, lng: 126.88415 },
-        { name: "궁정짬뽕",             menu: "짜장, 짬뽕, 탕수육",          category: "중식",        distance: "345m", rating: "92",    phone: "02-2085-0119",  placeId: "1069079978", lat: 37.47810, lng: 126.88410 },
-        { name: "새벽집",               menu: "청국장, 순두부, 찌개",          category: "밥",          distance: "348m", rating: "-",     phone: "0507-1374-0180", placeId: "1258624016", lat: 37.47805, lng: 126.88405 },
-        { name: "동그라미 김치찌개삼겹살",   menu: "김치/된장/부대 찌개, 불고기",   category: "밥",          distance: "350m", rating: "90",    phone: "0507-1335-0137", placeId: "1998006286", lat: 37.47800, lng: 126.88400 },
-        { name: "오한수우육면가",         menu: "우육탕, 도가니탕",            category: "면",          distance: "352m", rating: "-",     phone: "0507-1402-0184", placeId: "1046477869", lat: 37.47795, lng: 126.88395 },
-        { name: "신전떡볶이",           menu: "떡튀순",                    category: "분식",        distance: "355m", rating: "93",    phone: "0507-1392-8259", placeId: "33704297",   lat: 37.47790, lng: 126.88390 },
-        { name: "마이푸드 구내식당",       menu: "한식뷔페",                  category: "뷔페",        distance: "370m", rating: "90",    phone: "-",             placeId: "2031045305", lat: 37.47780, lng: 126.88350 },
-        { name: "애슐리퀸즈",           menu: "뷔페",                      category: "뷔페",        distance: "380m", rating: "-",     phone: "-",             placeId: "1611381835", lat: 37.47760, lng: 126.88470 },
-        { name: "큐큐면관",             menu: "짜장, 짬뽕, 탕수육",          category: "중식",        distance: "380m", rating: "-",     phone: "0507-1401-5050", placeId: "1550173990", lat: 37.47750, lng: 126.88460 },
-        { name: "자연밥상",             menu: "이것저것 많음",              category: "밥",          distance: "450m", rating: "86.5",  phone: "02-869-4578",   placeId: "1112254054", lat: 37.47700, lng: 126.88380 },
-        { name: "진심담은 된장찌개 진된장",  menu: "봄동 비빔밥, 된장전골, 칼비빔면", category: "찌개",      distance: "580m", rating: "93",    phone: "0507-1469-0429", placeId: "1308989777", lat: 37.47620, lng: 126.88330 },
-    ];
+    <script>
+        // 1. 데이터 베이스 (선생님이 고생해서 찾아주신 60개 ID와 이름 완벽 매칭!)
+        const placeIds = ["2038586814", "2145572206", "1962876645", "2036399312", "2025013395", "2069800270", "2043678907", "2015237914", "2096471239", "2089583017", "1938160274", "1119013682", "1311928970", "38693015", "13161100", "1077539258", "187013117", "1499785400", "1322760349", "1077459866", "1055353886", "1242504899", "1538522840", "1769151153", "2011921726", "1498991915", "1382739399", "1336727732", "37604881", "2140477547", "38415674", "1957765042", "1263116097", "1090467229", "1895639193", "1757084493", "1795436963", "1429342749", "1665146932", "1513961924", "1148683048", "1942838523", "117554783", "1517497605", "1983914774", "1288363622", "1358036124", "2089569470", "1048995641", "1305970950", "1069079978", "1258624016", "1998006286", "1046477869", "33704297", "2031045305", "1611381835", "1550173990", "1112254054", "1308989777"];
+        const names = ["얌얌한식뷔페", "무스탕키친", "도쎄멕시칸", "가온담", "구름산 추어탕", "토리키치", "삼교리동치미막국수", "세븐볶음", "오투닭갈비&부대찌개", "맛깔참죽 완도미역", "착한소있소", "명자수제돈까스", "용", "개성손만두요리전문점", "명가순대국", "밥생선구이", "춘천옥", "더덕솥뚜껑삼겹살", "삼복토종닭도리탕", "민속식당", "단정 현대아울렛 가산", "북창동순두부", "사월에보리밥과쭈꾸미", "두끼", "백초밥", "마치다쇼텐 마리오아울렛 본점", "광화문미진", "101번지남산돈까스", "니뽕내뽕", "전주식당", "보경닭한마리삼계탕", "연식당순대국", "역전우동", "한솥도시락 가산센트럴점", "싸다김밥가산푸르지오시티점", "맘스터치 가산센트럴점", "서울막창", "마라홀릭 마라탕", "미분당", "정백어가", "소요카제 라멘", "본래순대", "진케이", "반마리찜닭애 반찜", "본죽&비빔밥", "포빈", "보승회관", "조려당", "소플러스", "담소소사골순대육개장", "궁정짬뽕", "새벽집", "동그라미 김치찌개삼겹살", "오한수우육면가", "신전떡볶이", "마이푸드 구내식당", "애슐리퀸즈", "큐큐면관", "자연밥상", "진심담은 된장찌개 진된장"];
+        const emps = ["김미연","김혁중","류한식","박윤영","송원호","신윤철","안서형","우성욱","이홍비","임호준","장현진"];
 
-    const employees = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
-    let activeMarkerEl = null;
-    let editingRestaurant = null;
-    let editingMarker = null;
+        // 아스크타워 기준 좌표 (선생님이 확인하신 위치)
+        const ASK_LAT = 37.47987; 
+        const ASK_LNG = 126.88268;
 
-    // 로컬 스토리지 데이터 불러오기 (새로고침 방지용 임시 저장)
-    const savedAskTower = localStorage.getItem('asktower_location');
-    if (savedAskTower) {
-        try {
-            const parsed = JSON.parse(savedAskTower);
-            ASKTOWER_LAT = parsed.lat; ASKTOWER_LNG = parsed.lng;
-        } catch(e) {}
-    }
+        // 2. 겹침 방지 (수학적 나선형 배치 로직)
+        const restaurants = names.map((name, i) => {
+            let bLat = ASK_LAT, bLng = ASK_LNG;
+            // 엑셀 순서에 따라 대략적인 구역(아스크, 아울렛 등) 할당
+            if(i > 19 && i <= 30) { bLat = 37.4775; bLng = 126.8888; } // 현대아울렛 부근
+            else if(i > 30 && i <= 40) { bLat = 37.4721; bLng = 126.8841; } // 가산센트럴 부근
+            else if(i > 40) { bLat = 37.4741; bLng = 126.8845; } // 타워클래식/기타
 
-    const savedData = localStorage.getItem('adjusted_restaurant_locations');
-    if (savedData) {
-        try {
-            const parsedData = JSON.parse(savedData);
-            restaurants.forEach(r => {
-                const saved = parsedData.find(p => p.name === r.name);
-                if (saved) { r.lat = saved.lat; r.lng = saved.lng; }
-            });
-        } catch(e) {}
-    }
-
-    function saveLocationsToLocal() {
-        const saveArray = restaurants.map(r => ({ name: r.name, lat: r.lat, lng: r.lng }));
-        localStorage.setItem('adjusted_restaurant_locations', JSON.stringify(saveArray));
-    }
-
-    function calcDistance(lat1, lng1, lat2, lng2) {
-        const R = 6371000;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
-        return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    }
-
-    function initApp() {
-        initDropdowns(); initEmployeeList(); initMap();
-    }
-
-    function initDropdowns() {
-        const selects = ['menu1','menu2','menu3'].map(id => document.getElementById(id));
-        restaurants.forEach(r => {
-            selects.forEach(sel => {
-                const opt = document.createElement('option');
-                opt.value = r.name; opt.text = `[${r.category}] ${r.name}`;
-                sel.appendChild(opt);
-            });
-        });
-    }
-
-    function initEmployeeList() {
-        const tbody = document.getElementById('employee-list');
-        tbody.innerHTML = '';
-        employees.forEach((emp, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="font-size:12px;">${emp}</td>
-                <td><input type="radio" name="vote_${i}" value="1" onchange="countVotes()"></td>
-                <td><input type="radio" name="vote_${i}" value="2" onchange="countVotes()"></td>
-                <td><input type="radio" name="vote_${i}" value="3" onchange="countVotes()"></td>`;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function updateTableHeaders() {
-        document.getElementById('th-menu1').innerText = document.getElementById('menu1').value || '메뉴 1';
-        document.getElementById('th-menu2').innerText = document.getElementById('menu2').value || '메뉴 2';
-        document.getElementById('th-menu3').innerText = document.getElementById('menu3').value || '메뉴 3';
-    }
-
-    function resetMenus() {
-        if (confirm("초기화하시겠습니까?")) {
-            ['menu1','menu2','menu3'].forEach(id => document.getElementById(id).value = "");
-            updateTableHeaders(); initEmployeeList(); countVotes(); closeDetail();
-        }
-    }
-
-    function countVotes() {
-        let counts = {1:0, 2:0, 3:0};
-        document.querySelectorAll('input[type="radio"]:checked').forEach(r => counts[r.value]++);
-        document.getElementById('count1').innerText = `(${counts[1]}명)`;
-        document.getElementById('count2').innerText = `(${counts[2]}명)`;
-        document.getElementById('count3').innerText = `(${counts[3]}명)`;
-    }
-
-    function initMap() {
-        const map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
-            zoom: 16
+            // 겹치지 않게 달팽이 모양으로 10~15m씩 벌리기
+            const radius = 0.00015 * Math.floor(i / 6 + 1); 
+            const angle = i * (Math.PI / 3);
+            return {
+                id: placeIds[i],
+                name: name,
+                lat: bLat + Math.cos(angle) * radius,
+                lng: bLng + Math.sin(angle) * radius
+            };
         });
 
-        // 🏢 아스크타워 마커 생성
-        const askTowerMarker = new naver.maps.Marker({
-            position: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
-            map,
-            icon: { content: '<div class="home-marker">🏢 아스크타워</div>', anchor: new naver.maps.Point(55, 15) },
-            zIndex: 100
-        });
+        let map, markerObjs = [];
 
-        // 🚨 아스크타워 클릭 시 수정 모드 활성화
-        naver.maps.Event.addListener(askTowerMarker, 'click', function() {
-            editingRestaurant = 'ASKTOWER';
-            editingMarker = askTowerMarker;
-            alert("🏢 [아스크타워] 위치 수정 모드입니다.\n\n지도에서 새로운 기준점 위치를 클릭해주세요!");
-        });
-
-        restaurants.forEach(rest => {
-            const markerDiv = document.createElement('div');
-            markerDiv.className = 'custom-marker'; markerDiv.innerText = '📍 ' + rest.name;
-            const marker = new naver.maps.Marker({
-                position: new naver.maps.LatLng(rest.lat, rest.lng), 
-                map, icon: { content: markerDiv, anchor: new naver.maps.Point(60, 15) }
+        // 3. 앱 초기화
+        function initApp() {
+            // 드롭다운 및 테이블 세팅
+            const sels = [document.getElementById('sel-menu1'), document.getElementById('sel-menu2'), document.getElementById('sel-menu3')];
+            restaurants.forEach((r, idx) => {
+                sels.forEach(sel => {
+                    const opt = document.createElement('option');
+                    opt.value = idx; opt.text = r.name;
+                    sel.appendChild(opt);
+                });
             });
 
-            naver.maps.Event.addListener(marker, 'click', function() {
-                map.panTo(marker.getPosition()); openDetail(rest, markerDiv, marker);
+            const tbody = document.getElementById('emp-list');
+            emps.forEach((e, i) => {
+                tbody.innerHTML += `<tr><td>${e}</td><td><input type=radio name=v${i}></td><td><input type=radio name=v${i}></td><td><input type=radio name=v${i}></td></tr>`;
             });
-        });
 
-        // 🚨 지도 클릭 시: 위치 수정 모드일 때 좌표 이동 처리
-        naver.maps.Event.addListener(map, 'click', function(e) {
-            // 아스크타워 위치 이동
-            if (editingRestaurant === 'ASKTOWER') {
-                ASKTOWER_LAT = e.coord.lat();
-                ASKTOWER_LNG = e.coord.lng();
-                editingMarker.setPosition(e.coord);
-                
-                // 모든 식당의 거리 재계산 및 업데이트
-                restaurants.forEach(r => {
-                    r.distance = Math.round(calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, r.lat, r.lng)) + "m";
+            // 지도 그리기
+            map = new naver.maps.Map('map', {
+                center: new naver.maps.LatLng(ASK_LAT, ASK_LNG),
+                zoom: 16
+            });
+
+            // 아스크타워 마커 생성
+            new naver.maps.Marker({
+                position: new naver.maps.LatLng(ASK_LAT, ASK_LNG), map: map, zIndex: 999,
+                icon: { content: '<div class="marker-base marker-ask">🏢 아스크타워</div>', anchor: new naver.maps.Point(40, 15) }
+            });
+
+            // 60개 식당 마커 생성
+            restaurants.forEach((r, idx) => {
+                const marker = new naver.maps.Marker({
+                    position: new naver.maps.LatLng(r.lat, r.lng), map: map,
+                    icon: { content: `<div class="marker-base" id="m-${idx}">${r.name}</div>`, anchor: new naver.maps.Point(30, 15) }
                 });
                 
-                localStorage.setItem('asktower_location', JSON.stringify({lat: ASKTOWER_LAT, lng: ASKTOWER_LNG}));
-                alert("✅ 아스크타워 위치가 이동되었습니다!\n모든 식당과의 거리가 재계산되었습니다.\n\n우측 상단의 '위치 데이터 복사'를 눌러 원본 코드를 업데이트하세요.");
-                
-                editingRestaurant = null;
-                editingMarker = null;
-            } 
-            // 일반 식당 위치 이동
-            else if (editingRestaurant && editingMarker) {
-                editingRestaurant.lat = e.coord.lat();
-                editingRestaurant.lng = e.coord.lng();
-                editingMarker.setPosition(e.coord);
-                
-                const dist = calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, e.coord.lat(), e.coord.lng());
-                document.getElementById('d-distance').innerText = `약 ${dist}m (직선)`;
-                
-                saveLocationsToLocal();
-                alert(`✅ [${editingRestaurant.name}] 마커 위치가 이동되었습니다!\n우측 상단의 '위치 데이터 복사'를 눌러 원본 코드를 업데이트하세요.`);
-                
-                editingRestaurant = null;
-                editingMarker = null;
-            } else {
-                closeDetail();
-            }
-        });
-    }
+                // 마커 클릭 시 하단에 슬라이드 패널 띄우기
+                naver.maps.Event.addListener(marker, 'click', () => {
+                    document.getElementById('detail-title').innerText = r.name;
+                    // 아스크타워로부터의 직선거리 계산
+                    const dist = map.getProjection().getDistance(new naver.maps.LatLng(ASK_LAT, ASK_LNG), marker.getPosition());
+                    document.getElementById('detail-dist').innerText = `🏢 아스크타워에서 약 ${Math.round(dist)}m`;
+                    // 대망의 다이렉트 링크 연결!!
+                    document.getElementById('link-menu').href = `https://pcmap.place.naver.com/restaurant/${r.id}/menu/list`;
+                    document.getElementById('link-map').href = `https://pcmap.place.naver.com/restaurant/${r.id}/home`;
+                    document.getElementById('detail-panel').classList.add('show');
+                });
+                markerObjs.push(marker);
+            });
 
-    function openDetail(rest, markerEl, markerObj) {
-        if (activeMarkerEl) activeMarkerEl.classList.remove('active');
-        activeMarkerEl = markerEl; markerEl.classList.add('active');
-        editingRestaurant = null; editingMarker = null;
+            // 빈 지도 누르면 상세 패널 닫기
+            naver.maps.Event.addListener(map, 'click', closeDetail);
+        }
 
-        document.getElementById('d-name').innerText = rest.name;
-        document.getElementById('d-rating').innerText = rest.rating !== '-' ? `★ ${rest.rating}점` : '평점 정보 없음';
-        document.getElementById('d-category').innerText = rest.category;
+        function closeDetail() { document.getElementById('detail-panel').classList.remove('show'); }
 
-        const currentPos = markerObj.getPosition();
-        const dist = calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, currentPos.lat(), currentPos.lng());
-        document.getElementById('d-distance').innerText = `약 ${dist}m (직선)`;
-        document.getElementById('d-phone').innerText = rest.phone !== '-' ? rest.phone : '정보 없음';
+        // 4. 메뉴 선택 시 지도 마커 색상 변경 로직
+        function updateSelection() {
+            const m1 = document.getElementById('sel-menu1').value;
+            const m2 = document.getElementById('sel-menu2').value;
+            const m3 = document.getElementById('sel-menu3').value;
 
-        const menuContainer = document.getElementById('d-menus'); menuContainer.innerHTML = '';
-        rest.menu.split(',').map(m => m.trim()).forEach(m => {
-            const tag = document.createElement('span'); tag.className = 'menu-tag'; tag.innerText = m;
-            menuContainer.appendChild(tag);
-        });
+            document.getElementById('th-m1').innerText = m1 ? restaurants[m1].name : '메뉴1';
+            document.getElementById('th-m2').innerText = m2 ? restaurants[m2].name : '메뉴2';
+            document.getElementById('th-m3').innerText = m3 ? restaurants[m3].name : '메뉴3';
 
-        document.getElementById('d-naver-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}`;
-        document.getElementById('d-menu-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}/menu/list`;
+            // 모든 마커 기본 디자인으로 롤백
+            restaurants.forEach((r, idx) => {
+                const el = document.getElementById(`m-${idx}`);
+                if(el) {
+                    el.className = 'marker-base';
+                    el.style.zIndex = 1;
+                }
+            });
 
-        document.getElementById('d-edit-pos-btn').onclick = function() {
-            editingRestaurant = rest; editingMarker = markerObj;
-            alert(`📌 [${rest.name}] 위치 수정 모드입니다.\n\n지도에서 옮기고 싶은 곳을 클릭해주세요!`);
-        };
-
-        document.getElementById('detail-panel').classList.add('open');
-    }
-
-    function closeDetail() {
-        document.getElementById('detail-panel').classList.remove('open');
-        if (activeMarkerEl) { activeMarkerEl.classList.remove('active'); activeMarkerEl = null; }
-        editingRestaurant = null; editingMarker = null;
-    }
-
-    function copyUpdatedData() {
-        // 복사 시 아스크타워 좌표도 함께 포함해서 복사하도록 수정
-        const dataString = JSON.stringify(restaurants, null, 8);
-        const formatString = `// 아스크타워 기준점 (수정 가능하게 let으로 변경)\nlet ASKTOWER_LAT = ${ASKTOWER_LAT};\nlet ASKTOWER_LNG = ${ASKTOWER_LNG};\n\nlet restaurants = ${dataString};\n\n// 위 코드를 통째로 복사해서 기존 코드의 상수 및 restaurants 배열 부분에 덮어씌우세요.`;
-        
-        navigator.clipboard.writeText(formatString).then(() => {
-            alert("✅ 마커 이동이 반영된 데이터가 클립보드에 복사되었습니다!\n에디터에서 기존 코드(ASKTOWER_LAT 변수부터 restaurants 배열 끝까지)를 지우고 붙여넣기(Ctrl+V) 하세요.");
-        }).catch(err => {
-            alert("복사 실패. 개발자 도구 콘솔을 확인해주세요.");
-            console.log(formatString);
-        });
-    }
-</script>
+            // 선택된 마커는 색상 입히고 최상단으로 올리기
+            if(m1 && document.getElementById(`m-${m1}`)) { document.getElementById(`m-${m1}`).classList.add('marker-sel1'); document.getElementById(`m-${m1}`).style.zIndex = 100; }
+            if(m2 && document.getElementById(`m-${m2}`)) { document.getElementById(`m-${m2}`).classList.add('marker-sel2'); document.getElementById(`m-${m2}`).style.zIndex = 100; }
+            if(m3 && document.getElementById(`m-${m3}`)) { document.getElementById(`m-${m3}`).classList.add('marker-sel3'); document.getElementById(`m-${m3}`).style.zIndex = 100; }
+        }
+    </script>
 </body>
 </html>
