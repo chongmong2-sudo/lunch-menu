@@ -13,47 +13,41 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
         
-        /* 왼쪽 패널 */
         .left-panel { width: 400px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
         .header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
         .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
         .section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
         .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
         
-        /* 투표 테이블 */
         .voting-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
         .voting-table th { background: #f9f9f9; }
         .vote-count { color: var(--danger); font-weight: 700; display: block; }
 
-        /* [복구] 왼쪽 하단 고정 정보창 (빨간 펜 지시사항) */
-        #bottom-info-panel { padding: 15px; background: #fff; border-top: 2px solid var(--primary); min-height: 240px; }
-        .info-title { font-size: 17px; font-weight: 700; color: #333; margin-bottom: 8px; }
-        .info-row { font-size: 12px; margin-bottom: 4px; color: #555; display: flex; }
-        .info-label { font-weight: 700; color: #888; width: 65px; flex-shrink: 0; }
-        .info-btns { display: flex; gap: 8px; margin-top: 12px; }
-        .btn-link { flex: 1; padding: 9px; border-radius: 4px; text-align: center; text-decoration: none; color: white; font-weight: 700; font-size: 12px; }
+        /* 하단 정보창 스타일 강화 */
+        #bottom-info-panel { padding: 15px; background: #fff; border-top: 3px solid var(--primary); min-height: 250px; transition: all 0.2s; }
+        #bottom-info-panel.locked { background: #f0f7ff; border-top-color: #ff9f43; }
+        .info-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .info-title { font-size: 18px; font-weight: 700; color: #333; }
+        .lock-badge { font-size: 10px; padding: 2px 6px; background: #ff9f43; color: white; border-radius: 10px; display: none; }
+        #bottom-info-panel.locked .lock-badge { display: inline-block; }
+        
+        .info-row { font-size: 12px; margin-bottom: 5px; color: #555; display: flex; }
+        .info-label { font-weight: 700; color: #888; width: 70px; flex-shrink: 0; }
+        .info-btns { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-link { flex: 1; padding: 10px; border-radius: 4px; text-align: center; text-decoration: none; color: white; font-weight: 700; font-size: 13px; }
         .map-link { background: var(--green); }
         .menu-link { background: #ff9f43; }
-
-        /* [수정] 마커 옆 흰색 배경 썸네일 (커서 위치 연동) */
-        #marker-thumb {
-            position: fixed; display: none; background: white; color: #333;
-            padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 10000;
-            pointer-events: none; white-space: nowrap; line-height: 1.5;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--primary);
-        }
 
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
         .home-marker { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; border: 2px solid #c0392b; }
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
-        select { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; }
+        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .custom-marker:hover { background: var(--primary); color: white; z-index: 1000; }
+        select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; font-size: 13px; }
     </style>
 </head>
 <body>
-
-<div id="marker-thumb"></div>
 
 <div class="left-panel">
     <div class="header">🍱 아스크타워 맛집지도</div>
@@ -83,15 +77,20 @@
     </div>
 
     <div id="bottom-info-panel">
-        <div class="info-title" id="res-name">식당 마커를 클릭하세요</div>
-        <div class="info-row"><span class="info-label">분류/거리</span> <span id="res-cat">-</span> / <span id="res-dist">-</span></div>
-        <div class="info-row"><span class="info-label">메인메뉴</span> <span id="res-menu">-</span></div>
-        <div class="info-row"><span class="info-label">평점/전화</span> ⭐<span id="res-rate">-</span> / <span id="res-tel">-</span></div>
-        <div class="info-row"><span class="info-label">주소</span> <span id="res-addr">-</span></div>
-        <div class="info-row"><span class="info-label">비고</span> <span id="res-note">-</span></div>
-        <div class="info-btns">
-            <a href="#" id="link-map" target="_blank" class="btn-link map-link">네이버 지도</a>
-            <a href="#" id="link-menu" target="_blank" class="btn-link menu-link">메뉴판 보기</a>
+        <div class="info-header">
+            <div class="info-title" id="res-name">식당에 마우스를 올리세요</div>
+            <span class="lock-badge">선택됨(고정)</span>
+        </div>
+        <div id="info-content">
+            <div class="info-row"><span class="info-label">분류/거리</span> <span id="res-cat">-</span> / <span id="res-dist">-</span></div>
+            <div class="info-row"><span class="info-label">메인메뉴</span> <span id="res-menu">-</span></div>
+            <div class="info-row"><span class="info-label">평점/전화</span> ⭐<span id="res-rate">-</span> / <span id="res-tel">-</span></div>
+            <div class="info-row"><span class="info-label">주소</span> <span id="res-addr">-</span></div>
+            <div class="info-row"><span class="info-label">비고</span> <span id="res-note">-</span></div>
+            <div class="info-btns">
+                <a href="#" id="link-map" target="_blank" class="btn-link map-link">네이버 지도</a>
+                <a href="#" id="link-menu" target="_blank" class="btn-link menu-link">메뉴판 보기</a>
+            </div>
         </div>
     </div>
 </div>
@@ -103,10 +102,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // [복구] 멤버 이름 (임호준 -> 임효준 확인)
-    const emps = ["김미연", "김학종", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임효준", "장현진"];
+    // [수정] 김학중 -> 김혁중
+    const emps = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임효준", "장현진"];
     
-    // [완전 복구] 60개 식당 데이터 전체
+    // 60개 식당 데이터 (동일)
     const rests = [
         {"name":"얌얌한식뷔페","lat":37.476515,"lng":126.889612,"cat":"뷔페","dist":"10m","menu":"한식뷔페","rate":"83.75","tel":"010-5453-1253","addr":"아스크타워 2층","note":"구내식당"},
         {"name":"무스탕키친","lat":37.476927,"lng":126.889926,"cat":"인도네팔","dist":"10m","menu":"커리","rate":"82","tel":"0507-1315-4575","addr":"아스크타워","note":"저녁만 영업"},
@@ -171,7 +170,7 @@
     ];
 
     let map;
-    const thumb = document.getElementById('marker-thumb');
+    let isLocked = false; // 정보창 고정 상태 변수
 
     window.onload = function() {
         const sels = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
@@ -179,10 +178,8 @@
         
         map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.476742, 126.889731), zoom: 17 });
         
-        // 내 위치
         new naver.maps.Marker({ position: new naver.maps.LatLng(37.476742, 126.889731), map: map, icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) } });
 
-        // 식당 마커 및 이벤트
         rests.forEach(r => {
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(r.lat, r.lng),
@@ -190,33 +187,26 @@
                 icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
             });
 
-            // [마우스 오버] 커서 옆 흰색 썸네일
+            // 마우스 오버 시 정보 업데이트 (고정되지 않았을 때만)
             naver.maps.Event.addListener(marker, 'mouseover', () => {
-                thumb.style.display = 'block';
-                thumb.innerHTML = `<strong>${r.name}</strong><br>거리: ${r.dist}<br>메뉴: ${r.menu}`;
+                if (!isLocked) updateInfoPanel(r);
             });
-            naver.maps.Event.addListener(marker, 'mousemove', (e) => {
-                thumb.style.left = (e.originalEvent.clientX + 15) + 'px';
-                thumb.style.top = (e.originalEvent.clientY + 15) + 'px';
-            });
-            naver.maps.Event.addListener(marker, 'mouseout', () => { thumb.style.display = 'none'; });
 
-            // [클릭] 왼쪽 하단 고정 정보창 업데이트
+            // 클릭 시 정보 고정/해제
             naver.maps.Event.addListener(marker, 'click', () => {
-                document.getElementById('res-name').innerText = r.name;
-                document.getElementById('res-cat').innerText = r.cat;
-                document.getElementById('res-dist').innerText = r.dist;
-                document.getElementById('res-menu').innerText = r.menu;
-                document.getElementById('res-rate').innerText = r.rate;
-                document.getElementById('res-tel').innerText = r.tel;
-                document.getElementById('res-addr').innerText = r.addr;
-                document.getElementById('res-note').innerText = r.note || "-";
-                document.getElementById('link-map').href = `https://map.naver.com/v5/search/${encodeURIComponent(r.name)}`;
-                document.getElementById('link-menu').href = `https://search.naver.com/search.naver?query=${encodeURIComponent(r.name + ' 메뉴판')}`;
+                isLocked = true;
+                updateInfoPanel(r);
+                document.getElementById('bottom-info-panel').classList.add('locked');
             });
         });
 
-        // Firebase 실시간 연동
+        // 지도 빈 공간 클릭 시 고정 해제
+        naver.maps.Event.addListener(map, 'click', () => {
+            isLocked = false;
+            document.getElementById('bottom-info-panel').classList.remove('locked');
+        });
+
+        // Firebase 연동
         db.ref('lunch_vote').on('value', snap => {
             const data = snap.val() || {};
             for(let i=1; i<=3; i++) {
@@ -236,6 +226,19 @@
             [1,2,3].forEach(n => document.getElementById('c'+n).innerText = `(${counts[n]})`);
         });
     };
+
+    function updateInfoPanel(r) {
+        document.getElementById('res-name').innerText = r.name;
+        document.getElementById('res-cat').innerText = r.cat;
+        document.getElementById('res-dist').innerText = r.dist;
+        document.getElementById('res-menu').innerText = r.menu;
+        document.getElementById('res-rate').innerText = r.rate;
+        document.getElementById('res-tel').innerText = r.tel;
+        document.getElementById('res-addr').innerText = r.addr;
+        document.getElementById('res-note').innerText = r.note || "-";
+        document.getElementById('link-map').href = `https://map.naver.com/v5/search/${encodeURIComponent(r.name)}`;
+        document.getElementById('link-menu').href = `https://search.naver.com/search.naver?query=${encodeURIComponent(r.name + ' 메뉴판')}`;
+    }
 
     function sync() { db.ref('lunch_vote').update({ menu1: document.getElementById('menu1').value, menu2: document.getElementById('menu2').value, menu3: document.getElementById('menu3').value }); }
     function vote(i, v) { db.ref('lunch_vote').update({ ['vote_'+i]: v }); }
