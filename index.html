@@ -23,6 +23,7 @@
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
         .voting-table th { background: #f9f9f9; font-weight: 700; }
         .menu-label { color: var(--danger); display: block; font-size: 11px; margin-top: 2px; }
+        .vote-count { color: var(--danger); font-weight: 700; margin-left: 5px; } /* [수정됨] 참여 인원수 스타일 */
 
         #bottom-info-panel { padding: 15px; background: #fff; border-top: 3px solid var(--primary); min-height: 250px; display: none; }
         .info-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 10px; }
@@ -62,7 +63,7 @@
             <select id="menu3" onchange="sync()"><option value="">메뉴 3 선택</option></select>
         </div>
         <div class="section">
-            <div class="section-title">2. 실시간 투표 현황 (11명)</div>
+            <div class="section-title">2. 실시간 투표 현황 (<span id="total-participants">0</span>명 참여)</div>
             <table class="voting-table">
                 <thead>
                     <tr>
@@ -214,7 +215,6 @@
         db.ref('lunch_vote').on('value', snap => {
             const data = snap.val() || {};
             
-            // 메뉴 동기화 및 라벨 업데이트 (복구 포인트)
             document.getElementById('menu1').value = data.menu1 || "";
             document.getElementById('menu2').value = data.menu2 || "";
             document.getElementById('menu3').value = data.menu3 || "";
@@ -225,13 +225,20 @@
 
             const tbody = document.getElementById('list'); 
             tbody.innerHTML = '';
+            let totalVoted = 0; // [수정됨] 참여 인원 카운트 변수
+
             emps.forEach((name, i) => {
                 const v = data['vote_'+i] || 0;
+                if(v > 0) totalVoted++; // [수정됨] 투표한 경우 카운트 증가
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td>${name}</td>` + 
                     [1,2,3].map(n => `<td><input type="radio" name="v${i}" ${v==n?'checked':''} onclick="vote(${i},${n})"></td>`).join('');
                 tbody.appendChild(tr);
             });
+
+            // [수정됨] 화면에 총 참여 인원수 반영
+            document.getElementById('total-participants').innerText = totalVoted;
         });
     };
 
