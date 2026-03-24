@@ -3,53 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘 모먹지?</title>
+    <title>오늘 모먹지? - 아스크타워</title>
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-        :root { --primary: #4A90E2; --danger: #e74c3c; --bg: #F4F7F6; --border: #E0E0E0; --green: #03C75A; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+        /* [수정됨] 전체적인 테마와 폰트 가독성 대폭 개선 */
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
         
-        .left-panel { width: 400px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; flex-shrink: 0; }
-        .header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 18px; }
-        .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
-        .section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        :root { 
+            --primary: #3b82f6; 
+            --accent: #f59e0b;
+            --danger: #ef4444; 
+            --bg: #f8fafc; 
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text-main); }
         
-        .voting-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
-        .voting-table th { background: #f9f9f9; font-weight: 700; }
-        .menu-label { color: var(--danger); display: block; font-size: 11px; margin-top: 2px; }
-        /* [수정됨] 메뉴별 투표 인원수 스타일 */
-        .count-badge { color: var(--primary); font-size: 11px; font-weight: normal; margin-left: 2px; }
+        /* 왼쪽 패널 모던화 */
+        .left-panel { width: 420px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; box-shadow: 4px 0 20px rgba(0,0,0,0.03); }
+        
+        .header { 
+            padding: 24px 20px; 
+            background: #ffffff; 
+            color: var(--primary); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 800; 
+            font-size: 22px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .scroll-area { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        /* 섹션 카드 스타일링 */
+        .section { 
+            margin-bottom: 24px; 
+            background: #fff; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 16px; 
+            box-shadow: var(--shadow);
+        }
+        
+        .section-title { 
+            font-size: 15px; 
+            font-weight: 700; 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            color: var(--text-main);
+        }
+        
+        .reset-btn { 
+            background: #f1f5f9; 
+            border: none; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            color: var(--text-sub); 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .reset-btn:hover { background: #e2e8f0; color: var(--danger); }
 
-        #bottom-info-panel { padding: 15px; background: #fff; border-top: 3px solid var(--primary); min-height: 250px; display: none; }
-        .info-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 10px; }
-        .info-row { font-size: 12px; margin-bottom: 6px; color: #555; display: flex; }
-        .info-label { font-weight: 700; color: #888; width: 75px; flex-shrink: 0; }
-        .info-btns { display: flex; gap: 8px; margin-top: 15px; }
-        .btn-link { flex: 1; padding: 12px; border-radius: 4px; text-align: center; text-decoration: none; color: white; font-weight: 700; font-size: 13px; }
+        /* 테이블 디자인 혁신 (테두리 최소화) */
+        .voting-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .voting-table th { 
+            padding: 12px 4px; 
+            background: #f8fafc; 
+            font-weight: 600; 
+            color: var(--text-sub); 
+            border-bottom: 2px solid var(--border);
+        }
+        .voting-table td { padding: 10px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .voting-table tr:hover { background: #fdfdfd; }
+        
+        .menu-label { color: var(--accent); display: block; font-size: 11px; font-weight: 600; margin-top: 4px; }
+        .count-badge { color: var(--primary); font-size: 11px; font-weight: 700; background: #eff6ff; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
 
+        /* 하단 정보창 모던 디자인 */
+        #bottom-info-panel { 
+            padding: 24px; 
+            background: #fff; 
+            border-top: 1px solid var(--border); 
+            min-height: 280px; 
+            display: none; 
+            border-radius: 20px 20px 0 0; 
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+        }
+        .info-header { margin-bottom: 15px; }
+        .info-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .info-row { font-size: 13px; margin-bottom: 8px; color: var(--text-sub); display: flex; align-items: center; }
+        .info-label { font-weight: 600; color: #94a3b8; width: 80px; flex-shrink: 0; }
+        .info-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-link { 
+            flex: 1; padding: 14px; border-radius: 10px; text-align: center; 
+            text-decoration: none; color: white; font-weight: 700; font-size: 14px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-link:active { transform: scale(0.98); }
+
+        /* 지도 및 마커 */
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
 
-        .map-popup {
-            position: absolute; display: none; background: #333; color: #fff;
-            padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 2000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none;
-            transform: translate(-50%, -120%);
+        /* 커스텀 마커 디자인 개선 */
+        .custom-marker { 
+            background: white; border: 1px solid var(--primary); border-radius: 8px; 
+            padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); white-space: nowrap; transition: all 0.2s; 
         }
-        .map-popup::after {
-            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-            border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #333;
-        }
+        .custom-marker:hover { background: var(--primary); color: white; transform: translateY(-3px); }
 
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-        .custom-marker:hover { background: var(--primary); color: white; transform: scale(1.1); }
-        select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; font-size: 13px; }
+        select { 
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); 
+            margin-bottom: 10px; font-size: 13px; background: #fdfdfd; outline: none;
+        }
+        select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        /* 라디오 버튼 스타일 개선 */
+        input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -58,20 +140,20 @@
     <div class="header">🍱 오늘 모먹지?</div>
     <div class="scroll-area">
         <div class="section">
-            <div class="section-title">1. 선착순 메뉴 선점 <button style="cursor:pointer;" onclick="resetData()">↻ 초기화</button></div>
+            <div class="section-title">1. 선착순 메뉴 선점 <button class="reset-btn" onclick="resetData()">↻ 초기화</button></div>
             <select id="menu1" onchange="sync()"><option value="">메뉴 1 선택</option></select>
             <select id="menu2" onchange="sync()"><option value="">메뉴 2 선택</option></select>
             <select id="menu3" onchange="sync()"><option value="">메뉴 3 선택</option></select>
         </div>
         <div class="section">
-            <div class="section-title">2. 실시간 투표 현황 (<span id="total-participants">0</span>명 참여)</div>
+            <div class="section-title">2. 실시간 투표 현황 <span style="font-size:12px; font-weight:400; color:var(--text-sub);"><span id="total-participants" style="font-weight:700; color:var(--primary);">0</span>명 참여</span></div>
             <table class="voting-table">
                 <thead>
                     <tr>
-                        <th style="width:25%;">이름</th>
-                        <th style="width:25%;">메뉴 1<span id="count-m1" class="count-badge">(0)</span><span id="label-m1" class="menu-label">-</span></th>
-                        <th style="width:25%;">메뉴 2<span id="count-m2" class="count-badge">(0)</span><span id="label-m2" class="menu-label">-</span></th>
-                        <th style="width:25%;">메뉴 3<span id="count-m3" class="count-badge">(0)</span><span id="label-m3" class="menu-label">-</span></th>
+                        <th>이름</th>
+                        <th>메뉴 1<span id="count-m1" class="count-badge">0</span><span id="label-m1" class="menu-label">-</span></th>
+                        <th>메뉴 2<span id="count-m2" class="count-badge">0</span><span id="label-m2" class="menu-label">-</span></th>
+                        <th>메뉴 3<span id="count-m3" class="count-badge">0</span><span id="label-m3" class="menu-label">-</span></th>
                     </tr>
                 </thead>
                 <tbody id="list"></tbody>
@@ -79,30 +161,32 @@
         </div>
     </div>
     <div id="bottom-info-panel">
-        <div class="info-title" id="res-name">-</div>
-        <div class="info-row"><span class="info-label">분류/거리</span> <span id="res-cat">-</span> / <span id="res-dist">-</span></div>
-        <div class="info-row"><span class="info-label">메인메뉴</span> <span id="res-menu">-</span></div>
-        <div class="info-row"><span class="info-label">평점/전화</span> <span id="res-rate">-</span> / <span id="res-tel">-</span></div>
-        <div class="info-row"><span class="info-label">주소</span> <span id="res-addr">-</span></div>
+        <div class="info-header">
+            <div class="info-title" id="res-name">-</div>
+            <div style="font-size:13px; color:var(--primary); font-weight:600;" id="res-cat">-</div>
+        </div>
+        <div class="info-row"><span class="info-label">거리/평점</span> <span id="res-dist">-</span> · <span id="res-rate">-</span></div>
+        <div class="info-row"><span class="info-label">대표메뉴</span> <span id="res-menu" style="color:var(--text-main); font-weight:600;">-</span></div>
+        <div class="info-row"><span class="info-label">전화번호</span> <span id="res-tel">-</span></div>
+        <div class="info-row"><span class="info-label">상세주소</span> <span id="res-addr">-</span></div>
         <div class="info-btns">
-            <a href="#" id="link-map" target="_blank" class="btn-link" style="background: var(--green);">네이버 지도</a>
-            <a href="#" id="link-menu" target="_blank" class="btn-link" style="background: #ff9f43;">메뉴판 보기</a>
+            <a href="#" id="link-map" target="_blank" class="btn-link" style="background: #03C75A;">네이버 지도</a>
+            <a href="#" id="link-menu" target="_blank" class="btn-link" style="background: var(--accent);">메뉴판 보기</a>
         </div>
     </div>
 </div>
 
 <div class="right-panel">
     <div id="map"></div>
-    <div id="map-popup" class="map-popup"></div>
 </div>
 
 <script>
+    // [수정됨] Firebase 및 기본 데이터 유지
     const firebaseConfig = { apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q", authDomain: "lunch-menu-3c36c.firebaseapp.com", databaseURL: "https://lunch-menu-3c36c-default-rtdb.firebaseio.com", projectId: "lunch-menu-3c36c", storageBucket: "lunch-menu-3c36c.appspot.com", messagingSenderId: "498939490952", appId: "1:498939490952:web:9849dd97c3089a153a253d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
     const emps = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
-    
     const rests = [
         {"name":"얌얌한식뷔페","lat":37.476515,"lng":126.889612,"cat":"뷔페","dist":"10m","menu":"한식뷔페","rate":"83.75","tel":"010-5453-1253","addr":"아스크타워 2층","note":"구내식당"},
         {"name":"무스탕키친","lat":37.476927,"lng":126.889926,"cat":"인도네팔","dist":"10m","menu":"커리","rate":"82","tel":"0507-1315-4575","addr":"아스크타워","note":"저녁만 영업"},
@@ -167,7 +251,6 @@
     ];
 
     let map;
-    const popup = document.getElementById('map-popup');
 
     window.onload = function() {
         const sels = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
@@ -178,7 +261,7 @@
         new naver.maps.Marker({
             position: new naver.maps.LatLng(37.476742, 126.889731),
             map: map,
-            icon: { content: '<div style="background:#e74c3c; color:white; padding:5px 12px; border-radius:20px; font-weight:700; font-size:13px; box-shadow:2px 2px 5px rgba(0,0,0,0.3);">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
+            icon: { content: '<div style="background:var(--danger); color:white; padding:6px 14px; border-radius:30px; font-weight:700; font-size:13px; box-shadow:0 4px 10px rgba(0,0,0,0.2);">아스크타워</div>', anchor: new naver.maps.Point(40, 15) }
         });
 
         rests.forEach(r => {
@@ -187,17 +270,6 @@
                 map: map,
                 icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
             });
-
-            naver.maps.Event.addListener(marker, 'mouseover', () => {
-                const proj = map.getProjection();
-                const pos = proj.fromCoordToOffset(marker.getPosition());
-                popup.style.display = 'block';
-                popup.innerHTML = `<strong>${r.name}</strong><br>${r.cat} · ${r.dist}<br>추천: ${r.menu}`;
-                popup.style.left = pos.x + 'px';
-                popup.style.top = pos.y + 'px';
-            });
-
-            naver.maps.Event.addListener(marker, 'mouseout', () => { popup.style.display = 'none'; });
 
             naver.maps.Event.addListener(marker, 'click', () => {
                 document.getElementById('bottom-info-panel').style.display = 'block';
@@ -228,28 +300,22 @@
             tbody.innerHTML = '';
             
             let totalVoted = 0;
-            // [수정됨] 각 메뉴별 투표수 카운트용 객체
             const menuCounts = { 1: 0, 2: 0, 3: 0 };
 
             emps.forEach((name, i) => {
                 const v = data['vote_'+i] || 0;
-                if(v > 0) {
-                    totalVoted++;
-                    menuCounts[v]++; // [수정됨] 해당 메뉴 번호 카운트 증가
-                }
+                if(v > 0) { totalVoted++; menuCounts[v]++; }
 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${name}</td>` + 
+                tr.innerHTML = `<td style="font-weight:600;">${name}</td>` + 
                     [1,2,3].map(n => `<td><input type="radio" name="v${i}" ${v==n?'checked':''} onclick="vote(${i},${n})"></td>`).join('');
                 tbody.appendChild(tr);
             });
 
             document.getElementById('total-participants').innerText = totalVoted;
-            
-            // [수정됨] 화면 헤더의 각 메뉴별 (n) 표시 업데이트
-            document.getElementById('count-m1').innerText = `(${menuCounts[1]})`;
-            document.getElementById('count-m2').innerText = `(${menuCounts[2]})`;
-            document.getElementById('count-m3').innerText = `(${menuCounts[3]})`;
+            document.getElementById('count-m1').innerText = menuCounts[1];
+            document.getElementById('count-m2').innerText = menuCounts[2];
+            document.getElementById('count-m3').innerText = menuCounts[3];
         });
     };
 
@@ -262,17 +328,13 @@
     }
     
     function vote(i, v) { 
-        // [수정됨] 이미 선택된 라디오 버튼을 다시 누르면 투표 취소 기능 추가 (선택 사항이나 보통 필요함)
         db.ref('lunch_vote').once('value').then(snap => {
             const current = snap.val() ? snap.val()['vote_'+i] : 0;
-            if (current === v) {
-                db.ref('lunch_vote').update({ ['vote_'+i]: 0 });
-            } else {
-                db.ref('lunch_vote').update({ ['vote_'+i]: v });
-            }
+            if (current === v) { db.ref('lunch_vote').update({ ['vote_'+i]: 0 }); }
+            else { db.ref('lunch_vote').update({ ['vote_'+i]: v }); }
         });
     }
-    function resetData() { if(confirm("초기화?")) db.ref('lunch_vote').set(null); }
+    function resetData() { if(confirm("모든 데이터를 초기화할까요?")) db.ref('lunch_vote').set(null); }
 </script>
 </body>
 </html>
