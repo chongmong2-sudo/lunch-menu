@@ -14,6 +14,8 @@
         :root { --primary: #4A90E2; --danger: #e74c3c; --bg: #F4F7F6; --border: #E0E0E0; --text: #222; --green: #03C75A; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
+        
+        /* 왼쪽 패널 스타일 */
         .left-panel { width: 400px; background: white; box-shadow: 2px 0 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; z-index: 10; }
         .header { padding: 16px 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 700; }
         .btn-copy { background: var(--green); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
@@ -22,6 +24,8 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .section-title { font-size: 14px; font-weight: 700; }
         .btn-reset { background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        
+        /* 투표/메뉴 선택 스타일 */
         .menu-slot { display: flex; align-items: center; margin-bottom: 8px; }
         .menu-slot span { font-weight: 700; width: 50px; color: var(--primary); font-size: 13px; }
         .menu-slot select { flex: 1; padding: 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
@@ -29,47 +33,59 @@
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; font-size: 12px; }
         .voting-table th { background: #f9f9f9; font-weight: 700; }
         .vote-count { display: block; font-size: 11px; color: var(--danger); font-weight: 700; }
+        
+        /* 지도 및 마커 스타일 */
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
         .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; }
         .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 700; }
 
-        /* 마우스 커서 팝업 */
-        #cursor-popup {
-            position: fixed; display: none; background: rgba(33, 37, 41, 0.9); color: white;
-            padding: 10px; border-radius: 6px; font-size: 12px; z-index: 9999; pointer-events: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-width: 140px;
+        /* [핵심] 마우스 커서 썸네일 정보창 */
+        #cursor-info {
+            position: fixed;
+            display: none; /* 평소엔 숨김 */
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 10000;
+            pointer-events: none; /* 마우스 간섭 방지 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            min-width: 160px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
+        #cursor-info b { display: block; color: #5CC9FF; margin-bottom: 4px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div id="cursor-popup"></div>
+<div id="cursor-info"></div>
 
 <div class="left-panel">
     <div class="header">
         <span>🍱 오늘 점심 뭐 먹지?</span>
-        <button class="btn-copy" onclick="copyUpdatedData()">💾 위치 데이터 복사</button>
+        <button class="btn-copy" onclick="copyUpdatedData()">💾 데이터 복사</button>
     </div>
     <div class="scroll-area">
         <div class="section">
             <div class="section-header">
-                <div class="section-title">1. 선착순 메뉴 3개 선점</div>
-                <button class="btn-reset" onclick="resetAllData()">↻ 전체 초기화</button>
+                <div class="section-title">1. 메뉴 선점</div>
+                <button class="btn-reset" onclick="resetAllData()">↻ 초기화</button>
             </div>
             <div class="menu-slot"><span>메뉴 1</span><select id="menu1" onchange="syncMenus()"><option value="">선택해주세요</option></select></div>
             <div class="menu-slot"><span>메뉴 2</span><select id="menu2" onchange="syncMenus()"><option value="">선택해주세요</option></select></div>
             <div class="menu-slot"><span>메뉴 3</span><select id="menu3" onchange="syncMenus()"><option value="">선택해주세요</option></select></div>
         </div>
         <div class="section">
-            <div class="section-header"><div class="section-title">2. 메뉴 선택 (투표)</div></div>
+            <div class="section-header"><div class="section-title">2. 투표 현황</div></div>
             <table class="voting-table">
                 <thead>
                     <tr>
                         <th>이름</th>
-                        <th><span id="th-menu1">메뉴 1</span><span class="vote-count" id="count1">(0명)</span></th>
-                        <th><span id="th-menu2">메뉴 2</span><span class="vote-count" id="count2">(0명)</span></th>
-                        <th><span id="th-menu3">메뉴 3</span><span class="vote-count" id="count3">(0명)</span></th>
+                        <th><span id="th-menu1">메뉴 1</span><span class="vote-count" id="count1">(0)</span></th>
+                        <th><span id="th-menu2">메뉴 2</span><span class="vote-count" id="count2">(0)</span></th>
+                        <th><span id="th-menu3">메뉴 3</span><span class="vote-count" id="count3">(0)</span></th>
                     </tr>
                 </thead>
                 <tbody id="employee-list"></tbody>
@@ -80,7 +96,6 @@
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
-    // Firebase 설정
     const firebaseConfig = {
         apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q",
         authDomain: "lunch-menu-3c36c.firebaseapp.com",
@@ -97,12 +112,11 @@
     const employees = ["김미연", "김학종", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임효준", "장현진"];
 
     let map;
-    const cPopup = document.getElementById('cursor-popup');
-    const infoWindow = new naver.maps.InfoWindow({ anchorSkew: true });
+    const cursorInfo = document.getElementById('cursor-info');
 
     window.onload = function() {
         initDropdowns();
-        initMap(); // 지도는 한 번만 로드
+        initMap();
         db.ref('lunch_vote').on('value', snap => updateUI(snap.val() || {}));
     };
 
@@ -117,58 +131,50 @@
         const center = new naver.maps.LatLng(37.4767424, 126.8897311);
         map = new naver.maps.Map('map', { center: center, zoom: 17 });
         
-        // 아스크타워 본부 마커
         new naver.maps.Marker({
             position: center,
             map: map,
             icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
         });
 
-        // 식당 마커들 생성
         restaurants.forEach(r => {
-            const mPos = new naver.maps.LatLng(r.lat, r.lng);
             const marker = new naver.maps.Marker({
-                position: mPos,
+                position: new naver.maps.LatLng(r.lat, r.lng),
                 map: map,
                 icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
             });
 
-            // 클릭 시 정보창 (기존 기능 유지)
-            naver.maps.Event.addListener(marker, "click", () => {
-                const content = `
-                    <div style="padding:10px; min-width:140px; font-size:13px; line-height:1.4;">
-                        <b style="color:#4A90E2;">${r.name}</b><br>
-                        🍱 ${r.menu}<br>
-                        📍 ${r.category} | ${r.distance}
-                    </div>`;
-                infoWindow.setContent(content);
-                infoWindow.open(map, marker);
+            // [수정된 로직] 마우스 올리면 즉시 커서 옆에 정보 표시
+            naver.maps.Event.addListener(marker, 'mouseover', () => {
+                cursorInfo.style.display = 'block';
+                cursorInfo.innerHTML = `<b>${r.name}</b>종류: ${r.category}<br>메뉴: ${r.menu}<br>거리: ${r.distance}`;
             });
 
-            // 마우스 커서 팝업 (추가된 기능)
-            naver.maps.Event.addListener(marker, 'mouseover', () => { cPopup.style.display = 'block'; });
             naver.maps.Event.addListener(marker, 'mousemove', (e) => {
-                const ev = e.originalEvent;
-                cPopup.style.left = (ev.clientX + 15) + 'px';
-                cPopup.style.top = (ev.clientY + 15) + 'px';
-                cPopup.innerHTML = `<b>${r.name}</b><br><span style="color:#ddd; font-size:11px;">${r.category} · ${r.distance}</span>`;
+                const pointer = e.originalEvent;
+                cursorInfo.style.left = (pointer.clientX + 20) + 'px';
+                cursorInfo.style.top = (pointer.clientY + 10) + 'px';
             });
-            naver.maps.Event.addListener(marker, 'mouseout', () => { cPopup.style.display = 'none'; });
+
+            naver.maps.Event.addListener(marker, 'mouseout', () => {
+                cursorInfo.style.display = 'none';
+            });
+            
+            // 클릭 시엔 아무 일도 안 일어나게 하거나 (이미 썸네일이 나오니까요!) 
+            // 혹은 기존처럼 알림을 띄우고 싶으시면 아래 주석을 푸세요.
+            // naver.maps.Event.addListener(marker, 'click', () => { alert(r.name + " 선택!"); });
         });
     }
 
     function updateUI(data) {
-        // 메뉴 설정 업데이트 (지도는 건드리지 않음)
         for(let i=1; i<=3; i++) {
             const val = data[`menu${i}`] || "";
             document.getElementById(`menu${i}`).value = val;
             document.getElementById(`th-menu${i}`).innerText = val || `메뉴 ${i}`;
         }
-
         const tbody = document.getElementById('employee-list');
         tbody.innerHTML = '';
         let counts = { 1: 0, 2: 0, 3: 0 };
-
         employees.forEach((emp, i) => {
             const v = data[`vote_${i}`] || 0;
             if(v > 0) counts[v]++;
@@ -176,20 +182,13 @@
             tr.innerHTML = `<td>${emp}</td>` + [1,2,3].map(n => `<td><input type="radio" name="v_${i}" ${v==n?'checked':''} onclick="sendVote(${i}, ${n})"></td>`).join('');
             tbody.appendChild(tr);
         });
-
-        [1,2,3].forEach(n => document.getElementById(`count${n}`).innerText = `(${counts[n]}명)`);
+        [1,2,3].forEach(n => document.getElementById(`count${n}`).innerText = `(${counts[n]})`);
     }
 
-    function syncMenus() { 
-        db.ref('lunch_vote').update({ 
-            menu1: document.getElementById('menu1').value, 
-            menu2: document.getElementById('menu2').value, 
-            menu3: document.getElementById('menu3').value 
-        }); 
-    }
+    function syncMenus() { db.ref('lunch_vote').update({ menu1: document.getElementById('menu1').value, menu2: document.getElementById('menu2').value, menu3: document.getElementById('menu3').value }); }
     function sendVote(idx, val) { db.ref('lunch_vote').update({ [`vote_${idx}`]: val }); }
-    function resetAllData() { if(confirm("데이터를 초기화할까요?")) db.ref('lunch_vote').set(null); }
-    function copyUpdatedData() { navigator.clipboard.writeText(JSON.stringify(restaurants, null, 2)).then(() => alert("복사되었습니다!")); }
+    function resetAllData() { if(confirm("초기화할까요?")) db.ref('lunch_vote').set(null); }
+    function copyUpdatedData() { navigator.clipboard.writeText(JSON.stringify(restaurants, null, 2)).then(() => alert("데이터가 복사되었습니다.")); }
 </script>
 </body>
 </html>
