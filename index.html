@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘 점심 뭐 먹지?</title>
-    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x&submodules=geocoder&callback=initApp"></script>
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x&callback=initApp"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
         :root {
@@ -21,24 +21,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
 
-        .left-panel {
-            width: var(--panel-width);
-            background: white;
-            box-shadow: 2px 0 12px rgba(0,0,0,0.07);
-            display: flex;
-            flex-direction: column;
-            z-index: 10;
-        }
-        .header {
-            padding: 16px 20px;
-            background: var(--primary);
-            color: white;
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            flex-shrink: 0;
-        }
+        .left-panel { width: var(--panel-width); background: white; box-shadow: 2px 0 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; z-index: 10; }
+        .header { padding: 16px 20px; background: var(--primary); color: white; text-align: center; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0; }
         .scroll-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .section { padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -49,7 +33,6 @@
         .menu-slot span { font-weight: 700; width: 52px; color: var(--primary); font-size: 13px; }
         .menu-slot select { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fafafa; color: var(--text); cursor: pointer; }
         .menu-slot select:focus { outline: none; border-color: var(--primary); }
-
         .voting-table { width: 100%; border-collapse: collapse; }
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 7px 4px; text-align: center; font-size: 12px; }
         .voting-table th { background: #f5f5f5; font-weight: 700; }
@@ -57,7 +40,7 @@
         input[type="radio"] { cursor: pointer; transform: scale(1.2); accent-color: var(--primary); }
 
         .detail-panel { flex-shrink: 0; background: white; border-top: 2px solid var(--primary); overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s; opacity: 0; }
-        .detail-panel.open { max-height: 460px; opacity: 1; }
+        .detail-panel.open { max-height: 480px; opacity: 1; }
         .detail-inner { padding: 16px 18px 18px; }
         .detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
         .detail-name { font-size: 17px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.3; }
@@ -78,7 +61,7 @@
         .naver-btn.menu-btn { background: #FF6B35; }
         .naver-btn.menu-btn:hover { background: #e55a28; }
 
-        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
         .spinner { width: 36px; height: 36px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         #loading-overlay p { font-size: 14px; color: var(--text-muted); }
         #loading-progress { font-size: 13px; color: var(--primary); font-weight: 700; }
@@ -86,8 +69,10 @@
 
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
+
         .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.18s; white-space: nowrap; color: var(--text); font-family: 'Noto Sans KR', sans-serif; }
         .custom-marker:hover, .custom-marker.active { background: var(--primary); color: white; transform: scale(1.08); box-shadow: 0 4px 12px rgba(74,144,226,0.4); }
+        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px rgba(231,76,60,0.4); white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
     </style>
 </head>
 <body>
@@ -152,6 +137,9 @@
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
+    // 아스크타워 (회사 기준점)
+    const ASKTOWER = { lat: 37.48104, lng: 126.88261, placeId: "1533528834" };
+
     const restaurants = [
         { name: "얌얌한식뷔페", menu: "한식뷔페", category: "뷔페", distance: "10m", rating: "83.75", phone: "010-5453-1253", placeId: "2038586814" },
         { name: "무스탕키친", menu: "커리", category: "인도네팔", distance: "10m", rating: "82", phone: "0507-1315-4575", placeId: "2145572206" },
@@ -222,7 +210,7 @@
     function initApp() {
         initDropdowns();
         initEmployeeList();
-        loadCoordsAndInitMap();
+        loadPlaceCoords();
     }
 
     function initDropdowns() {
@@ -276,33 +264,67 @@
         document.getElementById('count3').innerText = `(${counts[3]}명)`;
     }
 
-    async function loadCoordsAndInitMap() {
+    // 네이버 플레이스 API로 좌표 가져오기
+    async function fetchPlaceCoord(placeId) {
+        try {
+            const res = await fetch(`https://map.naver.com/p/api/place/summary/${placeId}`, {
+                headers: { 'Referer': 'https://map.naver.com' }
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            const lat = parseFloat(data.y || data.lat || (data.coordinate && data.coordinate.y));
+            const lng = parseFloat(data.x || data.lng || (data.coordinate && data.coordinate.x));
+            if (lat && lng) return { lat, lng };
+        } catch(e) {}
+        return null;
+    }
+
+    // 직선거리 계산 (미터)
+    function calcDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+        return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    async function loadPlaceCoords() {
         const progressEl = document.getElementById('loading-progress');
-        let loaded = 0;
 
         map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(37.481, 126.882),
+            center: new naver.maps.LatLng(ASKTOWER.lat, ASKTOWER.lng),
             zoom: 16
         });
 
-        // 플레이스 ID로 좌표 조회 (10개씩 배치 처리)
-        const batchSize = 10;
-        for (let i = 0; i < restaurants.length; i += batchSize) {
+        // 아스크타워 마커 먼저 표시
+        new naver.maps.Marker({
+            position: new naver.maps.LatLng(ASKTOWER.lat, ASKTOWER.lng),
+            map,
+            icon: {
+                content: '<div class="home-marker">🏢 아스크타워 (우리회사)</div>',
+                anchor: new naver.maps.Point(70, 15)
+            }
+        });
+
+        let loaded = 0;
+        const total = restaurants.length;
+
+        // 5개씩 병렬 처리
+        const batchSize = 5;
+        for (let i = 0; i < total; i += batchSize) {
             const batch = restaurants.slice(i, i + batchSize);
-            await Promise.all(batch.map(rest => new Promise(resolve => {
-                naver.maps.Service.geocode({
-                    query: rest.name + ' 가산디지털단지'
-                }, function(status, response) {
-                    loaded++;
-                    progressEl.textContent = `${loaded} / ${restaurants.length}`;
-                    if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
-                        const addr = response.v2.addresses[0];
-                        rest.lat = parseFloat(addr.y);
-                        rest.lng = parseFloat(addr.x);
-                    }
-                    resolve();
-                });
-            })));
+            await Promise.all(batch.map(async rest => {
+                const coord = await fetchPlaceCoord(rest.placeId);
+                loaded++;
+                progressEl.textContent = `${loaded} / ${total}`;
+                if (coord) {
+                    rest.lat = coord.lat;
+                    rest.lng = coord.lng;
+                    // 아스크타워 기준 직선거리 계산
+                    const dist = calcDistance(ASKTOWER.lat, ASKTOWER.lng, coord.lat, coord.lng);
+                    rest.distanceCalc = dist + 'm (직선)';
+                }
+            }));
         }
 
         document.getElementById('loading-overlay').style.display = 'none';
@@ -310,8 +332,10 @@
     }
 
     function addMarkers() {
+        let successCount = 0;
         restaurants.forEach(rest => {
             if (!rest.lat || !rest.lng) return;
+            successCount++;
             const position = new naver.maps.LatLng(rest.lat, rest.lng);
             const markerDiv = document.createElement('div');
             markerDiv.className = 'custom-marker';
@@ -325,6 +349,7 @@
                 openDetail(rest, markerDiv);
             });
         });
+        console.log(`마커 ${successCount}/${restaurants.length}개 표시 완료`);
         naver.maps.Event.addListener(map, 'click', closeDetail);
     }
 
@@ -336,7 +361,8 @@
         document.getElementById('d-name').innerText = rest.name;
         document.getElementById('d-rating').innerText = rest.rating !== '-' ? `★ ${rest.rating}점` : '평점 정보 없음';
         document.getElementById('d-category').innerText = rest.category;
-        document.getElementById('d-distance').innerText = rest.distance;
+        // 계산된 거리가 있으면 표시, 없으면 기존 데이터
+        document.getElementById('d-distance').innerText = rest.distanceCalc || rest.distance;
         document.getElementById('d-phone').innerText = rest.phone !== '-' ? rest.phone : '정보 없음';
 
         const menuContainer = document.getElementById('d-menus');
