@@ -13,6 +13,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
         
+        /* 왼쪽 패널 */
         .left-panel { width: 400px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
         .header { padding: 12px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
         .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
@@ -23,25 +24,26 @@
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
         .voting-table th { background: #f9f9f9; }
 
+        /* 왼쪽 하단 정보창 */
         #bottom-info-panel { padding: 15px; background: #fff; border-top: 2px solid #ff9f43; min-height: 230px; display: none; }
-        .info-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 10px; }
+        .info-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .info-row { font-size: 12px; margin-bottom: 6px; color: #555; display: flex; }
-        .info-label { font-weight: 700; color: #888; width: 75px; }
+        .info-label { font-weight: 700; color: #888; width: 75px; flex-shrink: 0; }
         .info-btns { display: flex; gap: 8px; margin-top: 15px; }
         .btn-link { flex: 1; padding: 10px; border-radius: 4px; text-align: center; text-decoration: none; color: white; font-weight: 700; font-size: 13px; }
 
-        /* [수정] 맵 팝업 위치 고정을 위한 스타일 */
+        /* [핵심 수정] 지도 위 마우스 오버 팝업 - 커서 옆에 딱 붙게 */
         .map-popup {
-            position: fixed; display: none; background: rgba(255,255,255,0.95); border: 2px solid var(--primary);
-            padding: 10px; border-radius: 8px; font-size: 12px; z-index: 9999;
+            position: fixed; display: none; background: white; border: 2px solid var(--primary);
+            padding: 10px; border-radius: 8px; font-size: 12px; z-index: 10000;
             box-shadow: 3px 3px 15px rgba(0,0,0,0.2); pointer-events: none; min-width: 160px;
         }
         .map-popup strong { display: block; font-size: 14px; margin-bottom: 4px; color: var(--primary); }
 
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
-        select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; }
+        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -52,34 +54,32 @@
     <div class="header">🍱 오늘 모먹지?</div>
     <div class="scroll-area">
         <div class="section">
-            <div class="section-title">1. 선착순 메뉴 선점 <button onclick="resetData()">↻</button></div>
+            <div class="section-title">1. 선착순 메뉴 선점 <button style="font-size:10px; cursor:pointer;" onclick="resetData()">↻ 초기화</button></div>
             <select id="menu1" onchange="sync()"><option value="">메뉴 1 선택</option></select>
             <select id="menu2" onchange="sync()"><option value="">메뉴 2 선택</option></select>
             <select id="menu3" onchange="sync()"><option value="">메뉴 3 선택</option></select>
         </div>
         <div class="section">
-            <div class="section-title">2. 실시간 투표 현황</div>
+            <div class="section-title">2. 실시간 투표 현황 (11명)</div>
             <table class="voting-table">
-                <thead>
-                    <tr><th>이름</th><th>1</th><th>2</th><th>3</th></tr>
-                </thead>
+                <thead><tr><th width="25%">이름</th><th>1</th><th>2</th><th>3</th></tr></thead>
                 <tbody id="list"></tbody>
             </table>
         </div>
     </div>
     <div id="bottom-info-panel">
         <div class="info-title" id="res-name">식당 정보</div>
-        <div id="info-content">
-            <div class="info-row"><span class="info-label">분류/거리</span> <span id="res-cat">-</span> / <span id="res-dist">-</span></div>
-            <div class="info-row"><span class="info-label">메인메뉴</span> <span id="res-menu">-</span></div>
-            <div class="info-row"><span class="info-label">평점</span> ⭐<span id="res-rate">-</span></div>
-            <div class="info-btns">
-                <a href="#" id="link-map" target="_blank" class="btn-link" style="background:#03C75A">지도</a>
-                <a href="#" id="link-menu" target="_blank" class="btn-link" style="background:#ff9f43">메뉴판</a>
-            </div>
+        <div class="info-row"><span class="info-label">분류/거리</span> <span id="res-cat">-</span> / <span id="res-dist">-</span></div>
+        <div class="info-row"><span class="info-label">메인메뉴</span> <span id="res-menu">-</span></div>
+        <div class="info-row"><span class="info-label">평점/전화</span> ⭐<span id="res-rate">-</span> / <span id="res-tel">-</span></div>
+        <div class="info-row"><span class="info-label">주소</span> <span id="res-addr">-</span></div>
+        <div class="info-btns">
+            <a href="#" id="link-map" target="_blank" class="btn-link" style="background: #03C75A;">네이버 지도</a>
+            <a href="#" id="link-menu" target="_blank" class="btn-link" style="background: #ff9f43;">메뉴판 보기</a>
         </div>
     </div>
 </div>
+
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
@@ -160,6 +160,13 @@
         
         map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.476742, 126.889731), zoom: 17 });
         
+        // [아스크타워 복구]
+        new naver.maps.Marker({
+            position: new naver.maps.LatLng(37.476742, 126.889731),
+            map: map,
+            icon: { content: '<div style="background:#e74c3c; color:white; padding:5px 12px; border-radius:20px; font-weight:700; font-size:13px; box-shadow:2px 2px 5px rgba(0,0,0,0.3);">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
+        });
+
         rests.forEach(r => {
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(r.lat, r.lng),
@@ -167,18 +174,21 @@
                 icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) }
             });
 
-            // [핵심 수정] 마커 위치 기준으로 팝업 띄우기
-            naver.maps.Event.addListener(marker, 'mouseover', () => {
-                const proj = map.getProjection();
-                const pos = proj.fromCoordToContainerPixel(marker.getPosition());
-                
+            // [수정된 팝업 로직] 브라우저 마우스 위치를 그대로 사용
+            naver.maps.Event.addListener(marker, 'mouseover', (e) => {
                 popup.style.display = 'block';
-                popup.style.left = (pos.x + 410) + 'px'; // 왼쪽 바 너비(400) + 여백 포함
-                popup.style.top = (pos.y + 10) + 'px';
                 popup.innerHTML = `<strong>${r.name}</strong>[${r.cat}] ${r.dist}<br>추천: ${r.menu}`;
             });
 
-            naver.maps.Event.addListener(marker, 'mouseout', () => { popup.style.display = 'none'; });
+            naver.maps.Event.addListener(marker, 'mousemove', (e) => {
+                // 마우스 커서의 현재 위치를 가져와서 팝업창 위치를 실시간 업데이트
+                popup.style.left = (e.originalEvent.clientX + 15) + 'px';
+                popup.style.top = (e.originalEvent.clientY + 15) + 'px';
+            });
+
+            naver.maps.Event.addListener(marker, 'mouseout', () => {
+                popup.style.display = 'none';
+            });
 
             naver.maps.Event.addListener(marker, 'click', () => {
                 document.getElementById('bottom-info-panel').style.display = 'block';
@@ -187,6 +197,8 @@
                 document.getElementById('res-dist').innerText = r.dist;
                 document.getElementById('res-menu').innerText = r.menu;
                 document.getElementById('res-rate').innerText = r.rate;
+                document.getElementById('res-tel').innerText = r.tel;
+                document.getElementById('res-addr').innerText = r.addr;
                 document.getElementById('link-map').href = `https://map.naver.com/v5/search/${encodeURIComponent(r.name)}`;
                 document.getElementById('link-menu').href = `https://search.naver.com/search.naver?query=${encodeURIComponent(r.name + ' 메뉴판')}`;
             });
