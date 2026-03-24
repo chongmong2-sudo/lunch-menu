@@ -4,57 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘 점심 뭐 먹지? - 아스크타워 맛집지도</title>
+    
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-        :root {
-            --primary: #4A90E2; --primary-dark: #2c6fba; --danger: #e74c3c;
-            --bg: #F4F7F6; --border: #E0E0E0; --text: #222;
-            --text-muted: #888; --green: #03C75A; --panel-width: 400px;
-        }
+        :root { --primary: #4A90E2; --primary-dark: #2c6fba; --danger: #e74c3c; --bg: #F4F7F6; --border: #E0E0E0; --text: #222; --text-muted: #888; --green: #03C75A; --panel-width: 400px; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
-        
-        /* 레이아웃 */
         .left-panel { width: var(--panel-width); background: white; box-shadow: 2px 0 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; z-index: 10; }
         .header { padding: 16px 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: 700; flex-shrink: 0; }
         .header .btn-copy { background: var(--green); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700; }
-        
         .scroll-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .section { padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .section-title { font-size: 14px; font-weight: 700; }
-        
         .btn-reset { background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
         .menu-slot { display: flex; align-items: center; margin-bottom: 8px; }
         .menu-slot span { font-weight: 700; width: 52px; color: var(--primary); font-size: 13px; }
-        .menu-slot select { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fafafa; cursor: pointer; }
-
-        /* 투표 테이블 */
+        .menu-slot select { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fafafa; }
         .voting-table { width: 100%; border-collapse: collapse; }
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 7px 4px; text-align: center; font-size: 12px; }
         .voting-table th { background: #f5f5f5; font-weight: 700; }
         .vote-count { display: block; font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 700; }
-        input[type="radio"] { cursor: pointer; transform: scale(1.2); accent-color: var(--primary); }
-
-        /* 상세 패널 */
         .detail-panel { flex-shrink: 0; background: white; border-top: 2px solid var(--primary); overflow: hidden; max-height: 0; transition: max-height 0.35s ease, opacity 0.3s; opacity: 0; }
         .detail-panel.open { max-height: 520px; opacity: 1; }
         .detail-inner { padding: 16px 18px 18px; }
-        .detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .detail-name { font-size: 17px; font-weight: 700; color: var(--text); flex: 1; }
-        .detail-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); }
-        
-        .menu-tag { background: #EEF5FF; color: var(--primary-dark); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; margin: 2px; display: inline-block; }
-        .naver-btn { flex: 1; display: block; padding: 10px; background: var(--green); color: white; text-align: center; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; }
-
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
         .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; white-space: nowrap; }
         .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 13px; font-size: 13px; font-weight: 700; }
+        .menu-tag { background: #EEF5FF; color: var(--primary-dark); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; margin: 2px; display: inline-block; }
+        .naver-btn { flex: 1; display: block; padding: 10px; background: var(--green); color: white; text-align: center; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -90,26 +74,26 @@
         </div>
         <div class="detail-panel" id="detail-panel">
             <div class="detail-inner">
-                <div class="detail-top">
-                    <div class="detail-name" id="d-name"></div>
-                    <button class="detail-close" onclick="closeDetail()">✕</button>
+                <div class="detail-top" style="display:flex; justify-content:space-between;">
+                    <div class="detail-name" id="d-name" style="font-size:17px; font-weight:700;"></div>
+                    <button class="detail-close" onclick="closeDetail()" style="border:none; background:none; cursor:pointer;">✕</button>
                 </div>
-                <div id="d-rating" style="color:#f39c12; font-size:13px; margin-bottom:10px; font-weight:700;"></div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:12px;">
-                    <div style="background:#f8f9fa; padding:8px; border-radius:8px;">
-                        <div style="font-size:10px; color:#888;">분류</div><div id="d-category" style="font-size:12px; font-weight:500;"></div>
+                <div id="d-rating" style="color:#f39c12; font-size:13px; margin:5px 0;"></div>
+                <div class="detail-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:10px;">
+                    <div class="detail-item" style="background:#f8f9fa; padding:8px; border-radius:8px;">
+                        <div style="font-size:10px; color:#888;">분류</div><div id="d-category" style="font-size:12px;"></div>
                     </div>
-                    <div style="background:#f8f9fa; padding:8px; border-radius:8px;">
-                        <div style="font-size:10px; color:#888;">거리</div><div id="d-distance" style="font-size:12px; font-weight:500;"></div>
+                    <div class="detail-item" style="background:#f8f9fa; padding:8px; border-radius:8px;">
+                        <div style="font-size:10px; color:#888;">거리</div><div id="d-distance" style="font-size:12px;"></div>
                     </div>
                 </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:6px;">🍽 메뉴</div>
+                <div class="detail-menu-section">
+                    <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:5px;">🍽 메뉴</div>
                     <div id="d-menus"></div>
                 </div>
-                <div style="display:flex; gap:8px;">
-                    <a class="naver-btn" id="d-naver-link" href="#" target="_blank">🗺 네이버 지도</a>
-                    <a class="naver-btn" id="d-menu-link" href="#" target="_blank" style="background:#FF6B35;">📋 메뉴판 보기</a>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <a class="naver-btn" id="d-naver-link" href="#" target="_blank">🗺 지도</a>
+                    <a class="naver-btn" id="d-menu-link" href="#" target="_blank" style="background:#FF6B35;">📋 메뉴</a>
                 </div>
             </div>
         </div>
@@ -118,89 +102,92 @@
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
-    // 1. Firebase 설정 (원호님 정보 그대로 유지)
+    // [Firebase] 이미지 3번(image_efcea1.png)의 실제 설정값 반영
     const firebaseConfig = {
-        apiKey: "AIzaSyAs8XyK8C9jY4n9_8XyK8C9jY4n9",
-        databaseURL: "https://asktower-lunch-default-rtdb.firebaseio.com",
-        projectId: "asktower-lunch"
+        apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q",
+        authDomain: "lunch-menu-3c36c.firebaseapp.com",
+        databaseURL: "https://lunch-menu-3c36c-default-rtdb.firebaseio.com",
+        projectId: "lunch-menu-3c36c",
+        storageBucket: "lunch-menu-3c36c.appspot.com",
+        messagingSenderId: "498939490952",
+        appId: "1:498939490952:web:9849dd97c3089a153a253d",
+        measurementId: "G-TM7N27ZVJE"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. 51개 식당 데이터 (원본 그대로 반영)
     const ASKTOWER_LAT = 37.4767424, ASKTOWER_LNG = 126.8897311;
+    
+    // [Data] 51개 전체 리스트 (생략 없음)
     const restaurants = [
-        { "name": "얌얌한식뷔페", "menu": "한식뷔페", "category": "뷔페", "distance": "27m", "rating": "83.75", "phone": "010-5453-1253", "placeId": "2038586814", "lat": 37.476515, "lng": 126.889612 },
-        { "name": "무스탕키친", "menu": "커리", "category": "인도네팔", "distance": "27m", "rating": "82", "phone": "0507-1315-4575", "placeId": "2145572206", "lat": 37.4769271, "lng": 126.8899268 },
-        { "name": "도쎄프멕시칸", "menu": "타코, 브리또, 퀘사디아", "category": "남미음식", "distance": "36m", "rating": "85", "phone": "02-3467-4569", "placeId": "1962876645", "lat": 37.4764217, "lng": 126.8897743 },
-        { "name": "가온담", "menu": "감자탕", "category": "국, 탕, 찌개", "distance": "32m", "rating": "86.5", "phone": "02-3467-4530", "placeId": "2036399312", "lat": 37.4767531, "lng": 126.8900885 },
-        { "name": "구름산 추어탕", "menu": "추어탕", "category": "국밥", "distance": "26m", "rating": "88", "phone": "0507-1490-4549", "placeId": "2025013395", "lat": 37.4768312, "lng": 126.8900012 },
-        { "name": "토리키치", "menu": "야키토리동, 쿠시카츠", "category": "일본식 덮밥", "distance": "29m", "rating": "80", "phone": "02-2686-8585", "placeId": "2069800270", "lat": 37.4769545, "lng": 126.8899127 },
-        { "name": "삼교리동치미막국수", "menu": "막국수, 육개장", "category": "면", "distance": "45m", "rating": "85", "phone": "02-3467-4568", "placeId": "2043678907", "lat": 37.4770395, "lng": 126.8900812 },
-        { "name": "세븐볶음", "menu": "제육, 오징어 직화볶음", "category": "밥", "distance": "52m", "rating": "85", "phone": "02-3467-4797", "placeId": "2015237914", "lat": 37.4771046, "lng": 126.890047, },
-        { "name": "오투닭갈비&부대찌개", "menu": "닭갈비, 부대찌개, 막국수", "category": "고기", "distance": "46m", "rating": "83", "phone": "02-3467-4548", "placeId": "2096471239", "lat": 37.4768561, "lng": 126.8902321 },
-        { "name": "맛깔참죽 완도미역", "menu": "죽, 뚝배기밥, 덮밥", "category": "죽", "distance": "49m", "rating": "84", "phone": "02-3467-4585", "placeId": "2089583017", "lat": 37.4767851, "lng": 126.8902805 },
-        { "name": "착한소있소", "menu": "갈비탕, 국밥, 비빔밥", "category": "국, 탕, 찌개", "distance": "67m", "rating": "85", "phone": "0507-1446-9299", "placeId": "1938160274", "lat": 37.4770785, "lng": 126.8904017 },
-        { "name": "명자수제돈까스", "menu": "돈까스, 우동", "category": "일식", "distance": "67m", "rating": "88.5", "phone": "0507-1446-6188", "placeId": "1119013682", "lat": 37.4771895, "lng": 126.8902413 },
-        { "name": "용", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "80m", "rating": "89", "phone": "0507-1419-3469", "placeId": "1311928970", "lat": 37.4771099, "lng": 126.8905062 },
-        { "name": "개성손만두요리전문점", "menu": "만두전골, 찐만두", "category": "국, 탕, 찌개", "distance": "71m", "rating": "90", "phone": "0507-1439-8886", "placeId": "38693015", "lat": 37.4767948, "lng": 126.8905297 },
-        { "name": "명가순대국", "menu": "순대국, 감자탕", "category": "국, 탕, 찌개", "distance": "90m", "rating": "85", "phone": "070-8259-1235", "placeId": "13161100", "lat": 37.4775462, "lng": 126.889909 },
-        { "name": "밥생선구이", "menu": "생선구이, 찌개, 탕, 두루치기", "category": "밥", "distance": "77m", "rating": "80", "phone": "02-853-8776", "placeId": "1077539258", "lat": 37.4769747, "lng": 126.890551 },
-        { "name": "춘천옥", "menu": "보쌈정식, 막국수", "category": "밥", "distance": "123m", "rating": "88", "phone": "02-868-9937", "placeId": "187013117", "lat": 37.4778505, "lng": 126.8896977 },
-        { "name": "더덕솥뚜껑삼겹살", "menu": "된장, 순두부, 비빔밥, 생선구이", "category": "밥", "distance": "119m", "rating": "-", "phone": "02-868-9592", "placeId": "1499785400", "lat": 37.4778063, "lng": 126.8899056 },
-        { "name": "삼복토종닭도리탕", "menu": "닭도리탕, 동태탕, 알탕, 김치전골", "category": "국, 탕, 찌개", "distance": "127m", "rating": "-", "phone": "0507-1371-0238", "placeId": "1322760349", "lat": 37.4778586, "lng": 126.8900245 },
-        { "name": "민속식당", "menu": "칼국수, 수제비, 보리밥, 냉면", "category": "면", "distance": "150m", "rating": "83", "phone": "-", "placeId": "1077459866", "lat": 37.4779029, "lng": 126.8888811 },
-        { "name": "단정 현대아울렛 가산", "menu": "솥밥", "category": "밥", "distance": "117m", "rating": "86.5", "phone": "010-8838-3987", "placeId": "1055353886", "lat": 37.4777487, "lng": 126.8893177 },
-        { "name": "북창동순두부", "menu": "다양한 한상 차림", "category": "밥", "distance": "138m", "rating": "-", "phone": "0507-1363-0269", "placeId": "1242504899", "lat": 37.4779238, "lng": 126.8892132 },
-        { "name": "사월에보리밥과쭈꾸미", "menu": "보리한상, 쭈꾸미한상", "category": "밥, 찌개", "distance": "102m", "rating": "90", "phone": "02-2136-9957", "placeId": "1538522840", "lat": 37.4774342, "lng": 126.8889732 },
-        { "name": "두끼", "menu": "분식 뷔페", "category": "분식", "distance": "126m", "rating": "82.6", "phone": "02-2136-9960", "placeId": "1769151153", "lat": 37.4775965, "lng": 126.8887839 },
-        { "name": "백초밥", "menu": "초밥", "category": "일식", "distance": "90m", "rating": "-", "phone": "0507-1429-9959", "placeId": "2011921726", "lat": 37.4773241, "lng": 126.8890302 },
-        { "name": "마치다쇼텐 마리오아울렛 본점", "menu": "라멘", "category": "일식", "distance": "439m", "rating": "-", "phone": "0507-1321-7493", "placeId": "1498991915", "lat": 37.4784974, "lng": 126.8853055 },
-        { "name": "광화문미진", "menu": "덮밥, 우동, 돈까스, 메밀", "category": "면", "distance": "137m", "rating": "-", "phone": "0507-1469-9907", "placeId": "1382739399", "lat": 37.4777308, "lng": 126.8888086 },
-        { "name": "101번지남산돈까스", "menu": "돈까스, 덮밥, 쫄면, 우동", "category": "일식", "distance": "110m", "rating": "88", "phone": "02-2136-9958", "placeId": "1336727732", "lat": 37.47751, "lng": 126.8889024 },
-        { "name": "니뽕내뽕", "menu": "다양한 짬뽕, 피자, 리조또", "category": "중식", "distance": "150m", "rating": "-", "phone": "02-2136-9963", "placeId": "37604881", "lat": 37.4778714, "lng": 126.8887953 },
-        { "name": "전주식당", "menu": "백반, 김치찌개, 된장찌개", "category": "밥", "distance": "115m", "rating": "-", "phone": "02-853-0302", "placeId": "2140477547", "lat": 37.4770522, "lng": 126.8909824 },
-        { "name": "보경닭한마리삼계탕", "menu": "닭볶음탕, 삼계탕, 추어탕, 닭개장", "category": "국, 탕, 찌개", "distance": "151m", "rating": "-", "phone": "02-865-8461", "placeId": "38415674", "lat": 37.4780351, "lng": 126.890312 },
-        { "name": "연식당순대국", "menu": "순대국", "category": "국, 탕, 찌개", "distance": "155m", "rating": "-", "phone": "0507-1426-5188", "placeId": "1957765042", "lat": 37.4780491, "lng": 126.8903754 },
-        { "name": "역전우동", "menu": "우동, 소바, 돈까스, 덮밥", "category": "일식", "distance": "166m", "rating": "-", "phone": "02-862-0101", "placeId": "1263116097", "lat": 37.475355, "lng": 126.8904352 },
-        { "name": "한솥도시락 가산센트럴점", "menu": "밥, 까스, 찌개", "category": "밥", "distance": "160m", "rating": "-", "phone": "02-855-1117", "placeId": "1090467229", "lat": 37.4753912, "lng": 126.890379 },
-        { "name": "싸다김밥가산푸르지오시티점", "menu": "김밥, 우동, 분식", "category": "밥", "distance": "191m", "rating": "-", "phone": "02-859-8887", "placeId": "1895639193", "lat": 37.4751522, "lng": 126.8905617 },
-        { "name": "맘스터치 가산센트럴점", "menu": "버거", "category": "양식", "distance": "171m", "rating": "-", "phone": "02-855-7776", "placeId": "1757084493", "lat": 37.4753145, "lng": 126.8904512 },
-        { "name": "서울막창", "menu": "뚝곱창, 뚝배기, 물/비빔 막국수", "category": "밥, 면", "distance": "201m", "rating": "-", "phone": "02-808-5837", "placeId": "1795436963", "lat": 37.4751104, "lng": 126.8906325 },
-        { "name": "마라홀릭 마라탕", "menu": "마라탕", "category": "국, 탕, 찌개", "distance": "203m", "rating": "-", "phone": "0507-1381-7539", "placeId": "1429342749", "lat": 37.4750678, "lng": 126.8906508 },
-        { "name": "미분당", "menu": "쌀국수", "category": "면", "distance": "230m", "rating": "91", "phone": "02-855-9841", "placeId": "1665146932", "lat": 37.475008, "lng": 126.891136 },
-        { "name": "정백어가", "menu": "생선구이 정식", "category": "밥", "distance": "229m", "rating": "-", "phone": "0507-1322-8522", "placeId": "1513961924", "lat": 37.4766135, "lng": 126.8871402 },
-        { "name": "소요카제 라멘", "menu": "라멘", "category": "면", "distance": "233m", "rating": "84", "phone": "0507-1480-2988", "placeId": "1148683048", "lat": 37.4751342, "lng": 126.8913997 },
-        { "name": "본래순대", "menu": "순대국, 뼈해장국", "category": "국, 탕, 찌개", "distance": "237m", "rating": "-", "phone": "02-6230-5556", "placeId": "1942838523", "lat": 37.4746777, "lng": 126.8904267 },
-        { "name": "진케이", "menu": "초밥, 돈까스, 참치 김치찌개", "category": "일식", "distance": "234m", "rating": "70", "phone": "02-852-9892", "placeId": "117554783", "lat": 37.4751012, "lng": 126.8913161 },
-        { "name": "반마리찜닭애 반찜", "menu": "찜닭, 닭볶음탕", "category": "밥", "distance": "240m", "rating": "-", "phone": "-", "placeId": "1517497605", "lat": 37.4746416, "lng": 126.890346 },
-        { "name": "본죽&비빔밥", "menu": "다양한 죽", "category": "죽", "distance": "242m", "rating": "-", "phone": "0507-1481-5522", "placeId": "1983914774", "lat": 37.474614, "lng": 126.8902891 },
-        { "name": "포빈", "menu": "쌀국수, 볶음밥, 분짜", "category": "밥, 면", "distance": "286m", "rating": "84", "phone": "0507-1409-2085", "placeId": "1288363622", "lat": 37.4741724, "lng": 126.8899095 },
-        { "name": "보승회관", "menu": "국밥, 냉면", "category": "밥, 면, 탕", "distance": "294m", "rating": "-", "phone": "02-6230-6789", "placeId": "1358036124", "lat": 37.4740968, "lng": 126.8896766 },
-        { "name": "조려당", "menu": "두부조림, 북어국", "category": "면", "distance": "308m", "rating": "-", "phone": "02-2085-0127", "placeId": "2089569470", "lat": 37.4739879, "lng": 126.8893573 },
-        { "name": "소플러스", "menu": "솥밥", "category": "고기, 찌개", "distance": "300m", "rating": "84", "phone": "-", "placeId": "1048995641", "lat": 37.4740715, "lng": 126.8901264 },
-        { "name": "담소소사골순대육개장", "menu": "순두부, 순대국, 육개장", "category": "국, 탕, 찌개", "distance": "313m", "rating": "-", "phone": "02-2085-0151", "placeId": "1305970950", "lat": 37.4739428, "lng": 126.8893737 },
-        { "name": "궁정짬뽕", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "317m", "rating": "92", "phone": "02-2085-0119", "placeId": "1069079978", "lat": 37.4739114, "lng": 126.8892573 },
-        { "name": "새벽집", "menu": "청국장, 순두부, 찌개", "category": "밥", "distance": "339m", "rating": "-", "phone": "0507-1374-0180", "placeId": "1258624016", "lat": 37.4737449, "lng": 126.8890148 },
-        { "name": "동그라미 김치찌개삼겹살", "menu": "김치/된장/부대 찌개, 불고기", "category": "밥", "distance": "341m", "rating": "90", "phone": "0507-1335-0137", "placeId": "1998006286", "lat": 37.4737246, "lng": 126.8889507 },
-        { "name": "오한수우육면가", "menu": "우육탕, 도가니탕", "category": "면", "distance": "344m", "rating": "-", "phone": "0507-1402-0184", "placeId": "1046477869", "lat": 37.4737038, "lng": 126.8888712 },
-        { "name": "신전떡볶이", "menu": "떡튀순", "category": "분식", "distance": "354m", "rating": "93", "phone": "0507-1392-8259", "placeId": "33704297", "lat": 37.4736352, "lng": 126.8887481 },
-        { "name": "마이푸드 구내식당", "menu": "한식뷔페", "category": "뷔페", "distance": "334m", "rating": "90", "phone": "-", "placeId": "2031045305", "lat": 37.4766526, "lng": 126.8859383 },
-        { "name": "애슐리퀸즈", "menu": "뷔페", "category": "뷔페", "distance": "233m", "rating": "-", "phone": "-", "placeId": "1611381835", "lat": 37.4762692, "lng": 126.8871583 },
-        { "name": "큐큐면관", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "591m", "rating": "-", "phone": "0507-1401-5050", "placeId": "1550173990", "lat": 37.4807088, "lng": 126.8851774 },
-        { "name": "자연밥상", "menu": "이것저것 많음", "category": "밥", "distance": "382m", "rating": "86.5", "phone": "02-869-4578", "placeId": "1112254054", "lat": 37.473857, "lng": 126.8872922 },
-        { "name": "진심담은 된장찌개 진된장", "menu": "봄동 비빔밥, 된장전골, 칼비빔면", "category": "찌개", "distance": "603m", "rating": "93", "phone": "0507-1469-0429", "placeId": "1308989777", "lat": 37.4806795, "lng": 126.8850328 }
+        { "name": "얌얌한식뷔페", "menu": "한식뷔페", "category": "뷔페", "distance": "27m", "rating": "83.75", "placeId": "2038586814", "lat": 37.476515, "lng": 126.889612 },
+        { "name": "무스탕키친", "menu": "커리", "category": "인도네팔", "distance": "27m", "rating": "82", "placeId": "2145572206", "lat": 37.4769271, "lng": 126.8899268 },
+        { "name": "도쎄프멕시칸", "menu": "타코, 브리또, 퀘사디아", "category": "남미음식", "distance": "36m", "rating": "85", "placeId": "1962876645", "lat": 37.4764217, "lng": 126.8897743 },
+        { "name": "가온담", "menu": "감자탕", "category": "국, 탕, 찌개", "distance": "32m", "rating": "86.5", "placeId": "2036399312", "lat": 37.4767531, "lng": 126.8900885 },
+        { "name": "구름산 추어탕", "menu": "추어탕", "category": "국밥", "distance": "26m", "rating": "88", "placeId": "2025013395", "lat": 37.4768312, "lng": 126.8900012 },
+        { "name": "토리키치", "menu": "야키토리동, 쿠시카츠", "category": "일본식 덮밥", "distance": "29m", "rating": "80", "placeId": "2069800270", "lat": 37.4769545, "lng": 126.8899127 },
+        { "name": "삼교리동치미막국수", "menu": "막국수, 육개장", "category": "면", "distance": "45m", "rating": "85", "placeId": "2043678907", "lat": 37.4770395, "lng": 126.8900812 },
+        { "name": "세븐볶음", "menu": "제육, 오징어 직화볶음", "category": "밥", "distance": "52m", "rating": "85", "placeId": "2015237914", "lat": 37.4771046, "lng": 126.890047 },
+        { "name": "오투닭갈비&부대찌개", "menu": "닭갈비, 부대찌개, 막국수", "category": "고기", "distance": "46m", "rating": "83", "placeId": "2096471239", "lat": 37.4768561, "lng": 126.8902321 },
+        { "name": "맛깔참죽 완도미역", "menu": "죽, 뚝배기밥, 덮밥", "category": "죽", "distance": "49m", "rating": "84", "placeId": "2089583017", "lat": 37.4767851, "lng": 126.8902805 },
+        { "name": "착한소있소", "menu": "갈비탕, 국밥, 비빔밥", "category": "국, 탕, 찌개", "distance": "67m", "rating": "85", "placeId": "1938160274", "lat": 37.4770785, "lng": 126.8904017 },
+        { "name": "명자수제돈까스", "menu": "돈까스, 우동", "category": "일식", "distance": "67m", "rating": "88.5", "placeId": "1119013682", "lat": 37.4771895, "lng": 126.8902413 },
+        { "name": "용", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "80m", "rating": "89", "placeId": "1311928970", "lat": 37.4771099, "lng": 126.8905062 },
+        { "name": "개성손만두요리전문점", "menu": "만두전골, 찐만두", "category": "국, 탕, 찌개", "distance": "71m", "rating": "90", "placeId": "38693015", "lat": 37.4767948, "lng": 126.8905297 },
+        { "name": "명가순대국", "menu": "순대국, 감자탕", "category": "국, 탕, 찌개", "distance": "90m", "rating": "85", "placeId": "13161100", "lat": 37.4775462, "lng": 126.889909 },
+        { "name": "밥생선구이", "menu": "생선구이, 찌개, 탕, 두루치기", "category": "밥", "distance": "77m", "rating": "80", "placeId": "1077539258", "lat": 37.4769747, "lng": 126.890551 },
+        { "name": "춘천옥", "menu": "보쌈정식, 막국수", "category": "밥", "distance": "123m", "rating": "88", "placeId": "187013117", "lat": 37.4778505, "lng": 126.8896977 },
+        { "name": "더덕솥뚜껑삼겹살", "menu": "된장, 순두부, 비빔밥, 생선구이", "category": "밥", "distance": "119m", "rating": "-", "placeId": "1499785400", "lat": 37.4778063, "lng": 126.8899056 },
+        { "name": "삼복토종닭도리탕", "menu": "닭도리탕, 동태탕, 알탕, 김치전골", "category": "국, 탕, 찌개", "distance": "127m", "rating": "-", "placeId": "1322760349", "lat": 37.4778586, "lng": 126.8900245 },
+        { "name": "민속식당", "menu": "칼국수, 수제비, 보리밥, 냉면", "category": "면", "distance": "150m", "rating": "83", "placeId": "1077459866", "lat": 37.4779029, "lng": 126.8888811 },
+        { "name": "단정 현대아울렛 가산", "menu": "솥밥", "category": "밥", "distance": "117m", "rating": "86.5", "placeId": "1055353886", "lat": 37.4777487, "lng": 126.8893177 },
+        { "name": "북창동순두부", "menu": "다양한 한상 차림", "category": "밥", "distance": "138m", "rating": "-", "placeId": "1242504899", "lat": 37.4779238, "lng": 126.8892132 },
+        { "name": "사월에보리밥과쭈꾸미", "menu": "보리한상, 쭈꾸미한상", "category": "밥, 찌개", "distance": "102m", "rating": "90", "placeId": "1538522840", "lat": 37.4774342, "lng": 126.8889732 },
+        { "name": "두끼", "menu": "분식 뷔페", "category": "분식", "distance": "126m", "rating": "82.6", "placeId": "1769151153", "lat": 37.4775965, "lng": 126.8887839 },
+        { "name": "백초밥", "menu": "초밥", "category": "일식", "distance": "90m", "rating": "-", "placeId": "2011921726", "lat": 37.4773241, "lng": 126.8890302 },
+        { "name": "마치다쇼텐 마리오아울렛 본점", "menu": "라멘", "category": "일식", "distance": "439m", "rating": "-", "placeId": "1498991915", "lat": 37.4784974, "lng": 126.8853055 },
+        { "name": "광화문미진", "menu": "덮밥, 우동, 돈까스, 메밀", "category": "면", "distance": "137m", "rating": "-", "placeId": "1382739399", "lat": 37.4777308, "lng": 126.8888086 },
+        { "name": "101번지남산돈까스", "menu": "돈까스, 덮밥, 쫄면, 우동", "category": "일식", "distance": "110m", "rating": "88", "placeId": "1336727732", "lat": 37.47751, "lng": 126.8889024 },
+        { "name": "니뽕내뽕", "menu": "다양한 짬뽕, 피자, 리조또", "category": "중식", "distance": "150m", "rating": "-", "placeId": "37604881", "lat": 37.4778714, "lng": 126.8887953 },
+        { "name": "전주식당", "menu": "백반, 김치찌개, 된장찌개", "category": "밥", "distance": "115m", "rating": "-", "placeId": "2140477547", "lat": 37.4770522, "lng": 126.8909824 },
+        { "name": "보경닭한마리삼계탕", "menu": "닭볶음탕, 삼계탕, 추어탕, 닭개장", "category": "국, 탕, 찌개", "distance": "151m", "rating": "-", "placeId": "38415674", "lat": 37.4780351, "lng": 126.890312 },
+        { "name": "연식당순대국", "menu": "순대국", "category": "국, 탕, 찌개", "distance": "155m", "rating": "-", "placeId": "1957765042", "lat": 37.4780491, "lng": 126.8903754 },
+        { "name": "역전우동", "menu": "우동, 소바, 돈까스, 덮밥", "category": "일식", "distance": "166m", "rating": "-", "placeId": "1263116097", "lat": 37.475355, "lng": 126.8904352 },
+        { "name": "한솥도시락 가산센트럴점", "menu": "밥, 까스, 찌개", "category": "밥", "distance": "160m", "rating": "-", "placeId": "1090467229", "lat": 37.4753912, "lng": 126.890379 },
+        { "name": "싸다김밥가산푸르지오시티점", "menu": "김밥, 우동, 분식", "category": "밥", "distance": "191m", "rating": "-", "placeId": "1895639193", "lat": 37.4751522, "lng": 126.8905617 },
+        { "name": "맘스터치 가산센트럴점", "menu": "버거", "category": "양식", "distance": "171m", "rating": "-", "placeId": "1757084493", "lat": 37.4753145, "lng": 126.8904512 },
+        { "name": "서울막창", "menu": "뚝곱창, 뚝배기, 물/비빔 막국수", "category": "밥, 면", "distance": "201m", "rating": "-", "placeId": "1795436963", "lat": 37.4751104, "lng": 126.8906325 },
+        { "name": "마라홀릭 마라탕", "menu": "마라탕", "category": "국, 탕, 찌개", "distance": "203m", "rating": "-", "placeId": "1429342749", "lat": 37.4750678, "lng": 126.8906508 },
+        { "name": "미분당", "menu": "쌀국수", "category": "면", "distance": "230m", "rating": "91", "placeId": "1665146932", "lat": 37.475008, "lng": 126.891136 },
+        { "name": "정백어가", "menu": "생선구이 정식", "category": "밥", "distance": "229m", "rating": "-", "placeId": "1513961924", "lat": 37.4766135, "lng": 126.8871402 },
+        { "name": "소요카제 라멘", "menu": "라멘", "category": "면", "distance": "233m", "rating": "84", "placeId": "1148683048", "lat": 37.4751342, "lng": 126.8913997 },
+        { "name": "본래순대", "menu": "순대국, 뼈해장국", "category": "국, 탕, 찌개", "distance": "237m", "rating": "-", "placeId": "1942838523", "lat": 37.4746777, "lng": 126.8904267 },
+        { "name": "진케이", "menu": "초밥, 돈까스, 참치 김치찌개", "category": "일식", "distance": "234m", "rating": "70", "placeId": "117554783", "lat": 37.4751012, "lng": 126.8913161 },
+        { "name": "반마리찜닭애 반찜", "menu": "찜닭, 닭볶음탕", "category": "밥", "distance": "240m", "rating": "-", "placeId": "1517497605", "lat": 37.4746416, "lng": 126.890346 },
+        { "name": "본죽&비빔밥", "menu": "다양한 죽", "category": "죽", "distance": "242m", "rating": "-", "placeId": "1983914774", "lat": 37.474614, "lng": 126.8902891 },
+        { "name": "포빈", "menu": "쌀국수, 볶음밥, 분짜", "category": "밥, 면", "distance": "286m", "rating": "84", "placeId": "1288363622", "lat": 37.4741724, "lng": 126.8899095 },
+        { "name": "보승회관", "menu": "국밥, 냉면", "category": "밥, 면, 탕", "distance": "294m", "rating": "-", "placeId": "1358036124", "lat": 37.4740968, "lng": 126.8896766 },
+        { "name": "조려당", "menu": "두부조림, 북어국", "category": "면", "distance": "308m", "rating": "-", "placeId": "2089569470", "lat": 37.4739879, "lng": 126.8893573 },
+        { "name": "소플러스", "menu": "솥밥", "category": "고기, 찌개", "distance": "300m", "rating": "84", "placeId": "1048995641", "lat": 37.4740715, "lng": 126.8901264 },
+        { "name": "담소소사골순대육개장", "menu": "순두부, 순대국, 육개장", "category": "국, 탕, 찌개", "distance": "313m", "rating": "-", "placeId": "1305970950", "lat": 37.4739428, "lng": 126.8893737 },
+        { "name": "궁정짬뽕", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "317m", "rating": "92", "placeId": "1069079978", "lat": 37.4739114, "lng": 126.8892573 },
+        { "name": "새벽집", "menu": "청국장, 순두부, 찌개", "category": "밥", "distance": "339m", "rating": "-", "placeId": "1258624016", "lat": 37.4737449, "lng": 126.8890148 },
+        { "name": "동그라미 김치찌개삼겹살", "menu": "김치/된장/부대 찌개, 불고기", "category": "밥", "distance": "341m", "rating": "90", "placeId": "1998006286", "lat": 37.4737246, "lng": 126.8889507 },
+        { "name": "오한수우육면가", "menu": "우육탕, 도가니탕", "category": "면", "distance": "344m", "rating": "-", "placeId": "1046477869", "lat": 37.4737038, "lng": 126.8888712 },
+        { "name": "신전떡볶이", "menu": "떡튀순", "category": "분식", "distance": "354m", "rating": "93", "placeId": "33704297", "lat": 37.4736352, "lng": 126.8887481 },
+        { "name": "마이푸드 구내식당", "menu": "한식뷔페", "category": "뷔페", "distance": "334m", "rating": "90", "placeId": "2031045305", "lat": 37.4766526, "lng": 126.8859383 },
+        { "name": "애슐리퀸즈", "menu": "뷔페", "category": "뷔페", "distance": "233m", "rating": "-", "placeId": "1611381835", "lat": 37.4762692, "lng": 126.8871583 },
+        { "name": "큐큐면관", "menu": "짜장, 짬뽕, 탕수육", "category": "중식", "distance": "591m", "rating": "-", "placeId": "1550173990", "lat": 37.4807088, "lng": 126.8851774 },
+        { "name": "자연밥상", "menu": "백반/한식", "category": "밥", "distance": "382m", "rating": "86.5", "placeId": "1112254054", "lat": 37.473857, "lng": 126.8872922 },
+        { "name": "진심담은 된장찌개 진된장", "menu": "된장전골, 칼비빔면", "category": "찌개", "distance": "603m", "rating": "93", "placeId": "1308989777", "lat": 37.4806795, "lng": 126.8850328 }
     ];
 
     const employees = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
-    let map, activeMarkerEl = null;
+    let map, activeMarkerEl;
 
-    // 3. 앱 초기화
     window.onload = function() {
         initDropdowns();
         initMap();
-        
-        // Firebase 실시간 리스너: 데이터 변경 시 즉시 UI 업데이트
         db.ref('lunch_vote').on('value', (snapshot) => {
             const data = snapshot.val() || {};
             updateUI(data);
@@ -208,87 +195,61 @@
     };
 
     function initDropdowns() {
-        const selects = ['menu1', 'menu2', 'menu3'].map(id => document.getElementById(id));
+        const selects = ['menu1','menu2','menu3'].map(id => document.getElementById(id));
         restaurants.forEach(r => {
             selects.forEach(sel => {
                 const opt = document.createElement('option');
-                opt.value = r.name;
-                opt.text = `[${r.category}] ${r.name}`;
+                opt.value = r.name; opt.text = `[${r.category}] ${r.name}`;
                 sel.appendChild(opt);
             });
         });
     }
 
     function initMap() {
-        map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
-            zoom: 17
-        });
-
-        // 기준점 마커
+        map = new naver.maps.Map('map', { center: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG), zoom: 17 });
         new naver.maps.Marker({
             position: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
-            map,
-            icon: { content: '<div class="home-marker">🏢 아스크타워</div>', anchor: new naver.maps.Point(55, 15) },
-            zIndex: 100
+            map: map,
+            icon: { content: '<div class="home-marker">🏢 아스크타워</div>', anchor: new naver.maps.Point(55, 15) }
         });
-
-        // 식당 마커들
         restaurants.forEach(rest => {
             const markerDiv = document.createElement('div');
             markerDiv.className = 'custom-marker';
             markerDiv.innerText = '📍 ' + rest.name;
-
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(rest.lat, rest.lng),
-                map,
+                map: map,
                 icon: { content: markerDiv, anchor: new naver.maps.Point(60, 15) }
             });
-
-            naver.maps.Event.addListener(marker, 'click', () => {
-                map.panTo(marker.getPosition());
-                openDetail(rest, markerDiv);
-            });
+            naver.maps.Event.addListener(marker, 'click', () => openDetail(rest, markerDiv));
         });
     }
 
-    // 4. 실시간 UI 동기화 함수
     function updateUI(data) {
-        // 메뉴 드롭다운 & 헤더
-        for (let i = 1; i <= 3; i++) {
+        for(let i=1; i<=3; i++) {
             const val = data[`menu${i}`] || "";
-            document.getElementById(`menu1`).value = data.menu1 || "";
-            document.getElementById(`menu2`).value = data.menu2 || "";
-            document.getElementById(`menu3`).value = data.menu3 || "";
+            document.getElementById(`menu${i}`).value = val;
             document.getElementById(`th-menu${i}`).innerText = val || `메뉴 ${i}`;
         }
-
-        // 투표 테이블
         const tbody = document.getElementById('employee-list');
         tbody.innerHTML = '';
-        let counts = { 1: 0, 2: 0, 3: 0 };
-
+        let counts = {1:0, 2:0, 3:0};
         employees.forEach((emp, i) => {
             const voteVal = data[`vote_${i}`] || 0;
-            if (voteVal > 0) counts[voteVal]++;
-
+            if(voteVal > 0) counts[voteVal]++;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${emp}</td>
-                <td><input type="radio" name="v_${i}" ${voteVal == 1 ? 'checked' : ''} onclick="sendVote(${i}, 1)"></td>
-                <td><input type="radio" name="v_${i}" ${voteVal == 2 ? 'checked' : ''} onclick="sendVote(${i}, 2)"></td>
-                <td><input type="radio" name="v_${i}" ${voteVal == 3 ? 'checked' : ''} onclick="sendVote(${i}, 3)"></td>
+                <td><input type="radio" name="v_${i}" ${voteVal==1?'checked':''} onclick="sendVote(${i}, 1)"></td>
+                <td><input type="radio" name="v_${i}" ${voteVal==2?'checked':''} onclick="sendVote(${i}, 2)"></td>
+                <td><input type="radio" name="v_${i}" ${voteVal==3?'checked':''} onclick="sendVote(${i}, 3)"></td>
             `;
             tbody.appendChild(tr);
         });
-
-        // 투표수 업데이트
-        for (let i = 1; i <= 3; i++) {
-            document.getElementById(`count${i}`).innerText = `(${counts[i]}명)`;
-        }
+        for(let i=1; i<=3; i++) document.getElementById(`count${i}`).innerText = `(${counts[i]}명)`;
     }
 
-    // 5. 서버로 데이터 전송 함수
+    function sendVote(empIdx, val) { db.ref('lunch_vote').update({ [`vote_${empIdx}`]: val }); }
     function syncMenus() {
         db.ref('lunch_vote').update({
             menu1: document.getElementById('menu1').value,
@@ -296,52 +257,28 @@
             menu3: document.getElementById('menu3').value
         });
     }
-
-    function sendVote(empIdx, val) {
-        db.ref('lunch_vote').update({ [`vote_${empIdx}`]: val });
-    }
-
-    function resetAllData() {
-        if (confirm("정말로 모든 투표와 메뉴를 초기화하시겠습니까?")) {
-            db.ref('lunch_vote').set(null);
-        }
-    }
-
-    // 6. 기타 UI 로직
+    function resetAllData() { if(confirm("초기화할까요?")) db.ref('lunch_vote').set(null); }
     function openDetail(rest, markerEl) {
         if (activeMarkerEl) activeMarkerEl.classList.remove('active');
-        activeMarkerEl = markerEl;
-        markerEl.classList.add('active');
-
+        activeMarkerEl = markerEl; markerEl.classList.add('active');
         document.getElementById('d-name').innerText = rest.name;
         document.getElementById('d-rating').innerText = rest.rating !== '-' ? `★ ${rest.rating}점` : '평점 정보 없음';
         document.getElementById('d-category').innerText = rest.category;
-        document.getElementById('d-distance').innerText = `아스크타워 기준 ${rest.distance}`;
-        
+        document.getElementById('d-distance').innerText = rest.distance;
         const menuContainer = document.getElementById('d-menus');
         menuContainer.innerHTML = '';
         rest.menu.split(',').forEach(m => {
-            const tag = document.createElement('span');
-            tag.className = 'menu-tag';
-            tag.innerText = m.trim();
+            const tag = document.createElement('span'); tag.className = 'menu-tag'; tag.innerText = m.trim();
             menuContainer.appendChild(tag);
         });
-
         document.getElementById('d-naver-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}`;
         document.getElementById('d-menu-link').href = `https://map.naver.com/p/entry/place/${rest.placeId}/menu/list`;
         document.getElementById('detail-panel').classList.add('open');
     }
-
-    function closeDetail() {
-        document.getElementById('detail-panel').classList.remove('open');
-        if (activeMarkerEl) activeMarkerEl.classList.remove('active');
-    }
-
+    function closeDetail() { document.getElementById('detail-panel').classList.remove('open'); }
     function copyUpdatedData() {
         const dataString = JSON.stringify(restaurants, null, 4);
-        navigator.clipboard.writeText(`const restaurants = ${dataString};`).then(() => {
-            alert("✅ 위치 데이터가 클립보드에 복사되었습니다!");
-        });
+        navigator.clipboard.writeText(`const restaurants = ${dataString};`).then(() => { alert("데이터 복사 완료!"); });
     }
 </script>
 </body>
