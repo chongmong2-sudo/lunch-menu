@@ -273,15 +273,17 @@
                     icon: { content: markerHtml, size: new naver.maps.Size(120, 30), anchor: new naver.maps.Point(60, 15) }
                 });
 
-                const infoWindowHtml = `
-                    <div class="info-window">
-                        <h3>${rest.name}</h3>
-                        <p><strong>메뉴:</strong> ${rest.menu}</p>
-                        <p><strong>분류:</strong> ${rest.category} | <strong>거리:</strong> ${rest.distance}</p>
-                        <p><strong>평점:</strong> <span class="rating">★ ${rest.rating}</span></p>
-                        <p><strong>전화:</strong> ${rest.phone}</p>
-                    </div>
-                `;
+const naverLink = `https://map.naver.com/v5/search/${encodeURIComponent(rest.name)}`;
+const infoWindowHtml = `
+    <div class="info-window">
+        <h3>${rest.name}</h3>
+        <p><strong>메뉴:</strong> ${rest.menu}</p>
+        <p><strong>분류:</strong> ${rest.category} | <strong>거리:</strong> ${rest.distance}</p>
+        <p><strong>평점:</strong> <span class="rating">★ ${rest.rating}</span></p>
+        <p><strong>전화:</strong> ${rest.phone}</p>
+        <a href="${naverLink}" target="_blank" style="display:block; margin-top:10px; padding:6px; background:#03C75A; color:white; text-align:center; border-radius:4px; text-decoration:none; font-size:13px; font-weight:bold;">🗺️ 네이버 지도에서 보기</a>
+    </div>
+`;
 
                 const infoWindow = new naver.maps.InfoWindow({
                     content: infoWindowHtml, borderWidth: 0, disableAnchor: true, backgroundColor: 'transparent', pixelOffset: new naver.maps.Point(0, -10)
