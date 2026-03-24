@@ -11,8 +11,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
         :root { --primary: #4A90E2; --danger: #e74c3c; --bg: #F4F7F6; --border: #E0E0E0; --green: #03C75A; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { display: flex; height: 100vh; overflow: hidden; }
-        .left-panel { width: 400px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+        .left-panel { width: 400px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
         .header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
         .btn-copy { background: var(--green); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
         .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
@@ -21,36 +21,51 @@
         .btn-reset { background: var(--danger); color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
         .menu-slot { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
         .menu-slot span { width: 50px; font-weight: 700; color: var(--primary); }
-        .menu-slot select { flex: 1; padding: 5px; border-radius: 4px; border: 1px solid var(--border); }
+        .menu-slot select { flex: 1; padding: 5px; border-radius: 4px; border: 1px solid var(--border); background: #fff; }
         .voting-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
-        .voting-table th { background: #f9f9f9; }
-        .vote-count { color: var(--danger); font-weight: 700; display: block; }
-        .right-panel { flex: 1; }
+        .voting-table th { background: #f9f9f9; height: 50px; }
+        .vote-count { color: var(--danger); font-weight: 700; display: block; font-size: 11px; }
+        .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-        .home-marker { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; border: 2px solid #c0392b; }
-        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; }
+        
+        /* 툴팁 스타일 추가 */
+        #tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none; /* 마우스 간섭 방지 */
+            line-height: 1.5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .home-marker { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; border: 2px solid #c0392b; white-space: nowrap; }
+        .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; }
     </style>
 </head>
 <body>
-<div class="left-panel">
-    <div class="header">🍱 오늘 점심 뭐 먹지? <button class="btn-copy" onclick="copyData()">💾 위치 데이터 복사</button></div>
+<div id="tooltip"></div> <div class="left-panel">
+    <div class="header">🍱 아스크타워 맛집지도 <button class="btn-copy" onclick="copyData()">💾 데이터 복사</button></div>
     <div class="scroll-area">
         <div class="section">
-            <div class="section-title">1. 선착순 메뉴 3개 선점 <button class="btn-reset" onclick="resetData()">↻ 초기화</button></div>
+            <div class="section-title">1. 선착순 메뉴 3개 선점 <button class="btn-reset" onclick="resetData()">↻ 전체 초기화</button></div>
             <div class="menu-slot"><span>메뉴 1</span><select id="menu1" onchange="sync()"><option value="">선택하세요</option></select></div>
             <div class="menu-slot"><span>메뉴 2</span><select id="menu2" onchange="sync()"><option value="">선택하세요</option></select></div>
             <div class="menu-slot"><span>메뉴 3</span><select id="menu3" onchange="sync()"><option value="">선택하세요</option></select></div>
         </div>
         <div class="section">
-            <div class="section-title">2. 실시간 투표 현황</div>
+            <div class="section-title">2. 실시간 투표 현황 (11명)</div>
             <table class="voting-table">
                 <thead>
                     <tr>
                         <th>이름</th>
-                        <th><span id="label1">메뉴 1</span><span class="vote-count" id="c1">(0)</span></th>
-                        <th><span id="label2">메뉴 2</span><span class="vote-count" id="c2">(0)</span></th>
-                        <th><span id="label3">메뉴 3</span><span class="vote-count" id="c3">(0)</span></th>
+                        <th><span id="label1">메뉴 1</span><span class="vote-count" id="c1">(0명)</span></th>
+                        <th><span id="label2">메뉴 2</span><span class="vote-count" id="c2">(0명)</span></th>
+                        <th><span id="label3">메뉴 3</span><span class="vote-count" id="c3">(0명)</span></th>
                     </tr>
                 </thead>
                 <tbody id="list"></tbody>
@@ -74,78 +89,117 @@
     const db = firebase.database();
 
     const emps = ["김미연", "김학종", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
+    
+    // 식당 명단 (분류, 거리, 메뉴 상세 데이터 포함)
     const rests = [
-        {"name":"얌얌한식뷔페","lat":37.476515,"lng":126.889612,"cat":"뷔페"},
-        {"name":"무스탕키친","lat":37.476927,"lng":126.889926,"cat":"인도"},
-        {"name":"도쎄프멕시칸","lat":37.476421,"lng":126.889774,"cat":"멕시칸"},
-        {"name":"가온담","lat":37.476753,"lng":126.890088,"cat":"탕"},
-        {"name":"구름산 추어탕","lat":37.476831,"lng":126.890001,"cat":"국밥"},
-        {"name":"토리키치","lat":37.476954,"lng":126.889912,"cat":"일식"},
-        {"name":"삼교리동치미막국수","lat":37.477039,"lng":126.890081,"cat":"면"},
-        {"name":"세븐볶음","lat":37.477104,"lng":126.890047,"cat":"밥"},
-        {"name":"오투닭갈비&부대찌개","lat":37.476856,"lng":126.890232,"cat":"고기"},
-        {"name":"맛깔참죽 완도미역","lat":37.476785,"lng":126.890280,"cat":"죽"},
-        {"name":"착한소있소","lat":37.477078,"lng":126.890401,"cat":"탕"},
-        {"name":"명자수제돈까스","lat":37.477189,"lng":126.890241,"cat":"일식"},
-        {"name":"용","lat":37.477109,"lng":126.890506,"cat":"중식"},
-        {"name":"개성손만두요리전문점","lat":37.476794,"lng":126.890529,"cat":"만두"},
-        {"name":"명가순대국","lat":37.477546,"lng":126.889909,"cat":"탕"},
-        {"name":"밥생선구이","lat":37.476974,"lng":126.890551,"cat":"밥"},
-        {"name":"춘천옥","lat":37.477850,"lng":126.889697,"cat":"보쌈"},
-        {"name":"더덕솥뚜껑삼겹살","lat":37.477806,"lng":126.889905,"cat":"고기"},
-        {"name":"삼복토종닭도리탕","lat":37.477858,"lng":126.890024,"cat":"탕"},
-        {"name":"민속식당","lat":37.477902,"lng":126.888881,"cat":"면"},
-        {"name":"단정 현대아울렛","lat":37.477748,"lng":126.889317,"cat":"솥밥"},
-        {"name":"북창동순두부","lat":37.477923,"lng":126.889213,"cat":"밥"},
-        {"name":"사월에보리밥과쭈꾸미","lat":37.477434,"lng":126.888973,"cat":"밥"},
-        {"name":"두끼","lat":37.477596,"lng":126.888783,"cat":"분식"},
-        {"name":"백초밥","lat":37.477324,"lng":126.889030,"cat":"일식"},
-        {"name":"마치다쇼텐","lat":37.478497,"lng":126.885305,"cat":"라멘"},
-        {"name":"광화문미진","lat":37.477730,"lng":126.888808,"cat":"면"},
-        {"name":"101번지남산돈까스","lat":37.477510,"lng":126.888902,"cat":"일식"},
-        {"name":"니뽕내뽕","lat":37.477871,"lng":126.888795,"cat":"중식"},
-        {"name":"전주식당","lat":37.477052,"lng":126.890982,"cat":"밥"},
-        {"name":"보경닭한마리","lat":37.478035,"lng":126.890312,"cat":"탕"},
-        {"name":"연식당순대국","lat":37.478049,"lng":126.890375,"cat":"탕"},
-        {"name":"역전우동","lat":37.475355,"lng":126.890435,"cat":"일식"},
-        {"name":"한솥도시락","lat":37.475391,"lng":126.890379,"cat":"밥"},
-        {"name":"싸다김밥","lat":37.475152,"lng":126.890561,"cat":"분식"},
-        {"name":"맘스터치","lat":37.475314,"lng":126.890451,"cat":"패스트푸드"},
-        {"name":"서울막창","lat":37.475110,"lng":126.890632,"cat":"고기"},
-        {"name":"마라홀릭 마라탕","lat":37.475067,"lng":126.890650,"cat":"중식"},
-        {"name":"미분당","lat":37.475008,"lng":126.891136,"cat":"면"},
-        {"name":"정백어가","lat":37.476613,"lng":126.887140,"cat":"밥"},
-        {"name":"소요카제 라멘","lat":37.475134,"lng":126.891399,"cat":"일식"},
-        {"name":"본래순대","lat":37.474677,"lng":126.890426,"cat":"탕"},
-        {"name":"진케이","lat":37.475101,"lng":126.891316,"cat":"일식"},
-        {"name":"반마리찜닭","lat":37.474641,"lng":126.890346,"cat":"찜닭"},
-        {"name":"본죽&비빔밥","lat":37.474614,"lng":126.890289,"cat":"죽"},
-        {"name":"포빈","lat":37.474172,"lng":126.889909,"cat":"베트남"},
-        {"name":"보승회관","lat":37.474096,"lng":126.889676,"cat":"국밥"},
-        {"name":"조려당","lat":37.473987,"lng":126.889357,"cat":"밥"},
-        {"name":"소플러스","lat":37.474071,"lng":126.890126,"cat":"고기"},
-        {"name":"담소소사골순대","lat":37.473942,"lng":126.889373,"cat":"탕"},
-        {"name":"궁정짬뽕","lat":37.473911,"lng":126.889257,"cat":"중식"},
-        {"name":"새벽집","lat":37.473744,"lng":126.889014,"cat":"밥"},
-        {"name":"동그라미 김치찌개","lat":37.473724,"lng":126.888950,"cat":"찌개"},
-        {"name":"오한수우육면가","lat":37.473703,"lng":126.888871,"cat":"면"},
-        {"name":"신전떡볶이","lat":37.473635,"lng":126.888748,"cat":"분식"},
-        {"name":"마이푸드","lat":37.476652,"lng":126.885938,"cat":"뷔페"},
-        {"name":"애슐리퀸즈","lat":37.476269,"lng":126.887158,"cat":"뷔페"},
-        {"name":"큐큐면관","lat":37.480708,"lng":126.885177,"cat":"중식"},
-        {"name":"자연밥상","lat":37.473857,"lng":126.887292,"cat":"밥"},
-        {"name":"진된장","lat":38.480679,"lng":126.885032,"cat":"찌개"}
+        {"name":"얌얌한식뷔페","lat":37.476515,"lng":126.889612,"cat":"뷔페","dist":"27m","menu":"한식뷔페"},
+        {"name":"무스탕키친","lat":37.476927,"lng":126.889926,"cat":"인도","dist":"27m","menu":"커리"},
+        {"name":"도쎄프멕시칸","lat":37.476421,"lng":126.889774,"cat":"멕시칸","dist":"36m","menu":"타코, 브리또"},
+        {"name":"가온담","lat":37.476753,"lng":126.890088,"cat":"탕","dist":"32m","menu":"감자탕"},
+        {"name":"구름산 추어탕","lat":37.476831,"lng":126.890001,"cat":"국밥","dist":"26m","menu":"추어탕"},
+        {"name":"토리키치","lat":37.476954,"lng":126.889912,"cat":"일식","dist":"29m","menu":"야키토리동"},
+        {"name":"삼교리동치미막국수","lat":37.477039,"lng":126.890081,"cat":"면","dist":"45m","menu":"막국수, 육개장"},
+        {"name":"세븐볶음","lat":37.477104,"lng":126.890047,"cat":"밥","dist":"52m","menu":"제육, 오징어 직화"},
+        {"name":"오투닭갈비&부대찌개","lat":37.476856,"lng":126.890232,"cat":"고기","dist":"46m","menu":"닭갈비, 부대찌개"},
+        {"name":"맛깔참죽 완도미역","lat":37.476785,"lng":126.890280,"cat":"죽","dist":"49m","menu":"죽, 뚝배기밥"},
+        {"name":"착한소있소","lat":37.477078,"lng":126.890401,"cat":"탕","dist":"67m","menu":"갈비탕, 국밥"},
+        {"name":"명자수제돈까스","lat":37.477189,"lng":126.890241,"cat":"일식","dist":"67m","menu":"수제돈까스, 우동"},
+        {"name":"용","lat":37.477109,"lng":126.890506,"cat":"중식","dist":"80m","menu":"짜장, 짬뽕, 탕수육"},
+        {"name":"개성손만두","lat":37.476794,"lng":126.890529,"cat":"만두","dist":"71m","menu":"만두전골, 찐만두"},
+        {"name":"명가순대국","lat":37.477546,"lng":126.889909,"cat":"탕","dist":"90m","menu":"순대국, 감자탕"},
+        {"name":"밥생선구이","lat":37.476974,"lng":126.890551,"cat":"밥","dist":"77m","menu":"생선구이, 찌개"},
+        {"name":"춘천옥","lat":37.477850,"lng":126.889697,"cat":"보쌈","dist":"123m","menu":"보쌈정식, 막국수"},
+        {"name":"더덕솥뚜껑삼겹살","lat":37.477806,"lng":126.889905,"cat":"고기","dist":"119m","menu":"된장, 순두부, 생선구이"},
+        {"name":"삼복토종닭도리탕","lat":37.477858,"lng":126.890024,"cat":"탕","dist":"127m","menu":"닭도리탕, 동태탕"},
+        {"name":"민속식당","lat":37.477902,"lng":126.888881,"cat":"면","dist":"150m","menu":"칼국수, 보리밥"},
+        {"name":"단정 현대아울렛","lat":37.477748,"lng":126.889317,"cat":"솥밥","dist":"117m","menu":"솥밥 정식"},
+        {"name":"북창동순두부","lat":37.477923,"lng":126.889213,"cat":"밥","dist":"138m","menu":"순두부 한상"},
+        {"name":"사월에보리밥과쭈꾸미","lat":37.477434,"lng":126.888973,"cat":"밥","dist":"102m","menu":"보리밥, 쭈꾸미"},
+        {"name":"두끼","lat":37.477596,"lng":126.888783,"cat":"분식","dist":"126m","menu":"즉석떡볶이 뷔페"},
+        {"name":"백초밥","lat":37.477324,"lng":126.889030,"cat":"일식","dist":"90m","menu":"초밥"},
+        {"name":"마치다쇼텐","lat":37.478497,"lng":126.885305,"cat":"라멘","dist":"439m","menu":"일본식 라멘"},
+        {"name":"광화문미진","lat":37.477730,"lng":126.888808,"cat":"면","dist":"137m","menu":"메밀, 우동, 돈까스"},
+        {"name":"101번지남산돈까스","lat":37.477510,"lng":126.888902,"cat":"일식","dist":"110m","menu":"왕돈까스"},
+        {"name":"니뽕내뽕","lat":37.477871,"lng":126.888795,"cat":"중식","dist":"150m","menu":"퓨전 짬뽕, 피자"},
+        {"name":"전주식당","lat":37.477052,"lng":126.890982,"cat":"밥","dist":"115m","menu":"백반, 찌개"},
+        {"name":"보경닭한마리","lat":37.478035,"lng":126.890312,"cat":"탕","dist":"151m","menu":"닭볶음탕, 삼계탕"},
+        {"name":"연식당순대국","lat":37.478049,"lng":126.890375,"cat":"탕","dist":"155m","menu":"순대국"},
+        {"name":"역전우동","lat":37.475355,"lng":126.890435,"cat":"일식","dist":"166m","menu":"우동, 소바, 덮밥"},
+        {"name":"한솥도시락","lat":37.475391,"lng":126.890379,"cat":"밥","dist":"160m","menu":"도시락 정식"},
+        {"name":"싸다김밥","lat":37.475152,"lng":126.890561,"cat":"분식","dist":"191m","menu":"김밥, 분식"},
+        {"name":"맘스터치","lat":37.475314,"lng":126.890451,"cat":"버거","dist":"171m","menu":"치킨버거"},
+        {"name":"서울막창","lat":37.475110,"lng":126.890632,"cat":"고기","dist":"201m","menu":"뚝곱창, 막국수"},
+        {"name":"마라홀릭 마라탕","lat":37.475067,"lng":126.890650,"cat":"중식","dist":"203m","menu":"마라탕, 꿔바로우"},
+        {"name":"미분당","lat":37.475008,"lng":126.891136,"cat":"면","dist":"230m","menu":"쌀국수"},
+        {"name":"정백어가","lat":37.476613,"lng":126.887140,"cat":"밥","dist":"229m","menu":"생선구이 정식"},
+        {"name":"소요카제 라멘","lat":37.475134,"lng":126.891399,"cat":"일식","dist":"233m","menu":"일본 라멘"},
+        {"name":"본래순대","lat":37.474677,"lng":126.890426,"cat":"탕","dist":"237m","menu":"순대국, 뼈해장국"},
+        {"name":"진케이","lat":37.475101,"lng":126.891316,"cat":"일식","dist":"234m","menu":"초밥, 돈까스"},
+        {"name":"반마리찜닭","lat":37.474641,"lng":126.890346,"cat":"찜닭","dist":"240m","menu":"찜닭, 닭볶음탕"},
+        {"name":"본죽&비빔밥","lat":37.474614,"lng":126.890289,"cat":"죽","dist":"242m","menu":"죽, 비빔밥"},
+        {"name":"포빈","lat":37.474172,"lng":126.889909,"cat":"베트남","dist":"286m","menu":"쌀국수, 분짜"},
+        {"name":"보승회관","lat":37.474096,"lng":126.889676,"cat":"국밥","dist":"294m","menu":"국밥, 냉면"},
+        {"name":"조려당","lat":37.473987,"lng":126.889357,"cat":"밥","dist":"308m","menu":"두부조림, 북어국"},
+        {"name":"소플러스","lat":37.474071,"lng":126.890126,"cat":"고기","dist":"300m","menu":"소갈비살, 솥밥"},
+        {"name":"담소소사골순대","lat":37.473942,"lng":126.889373,"cat":"탕","dist":"313m","menu":"순대국, 육개장"},
+        {"name":"궁정짬뽕","lat":37.473911,"lng":126.889257,"cat":"중식","dist":"317m","menu":"짬뽕, 탕수육"},
+        {"name":"새벽집","lat":37.473744,"lng":126.889014,"cat":"밥","dist":"339m","menu":"청국장, 순두부"},
+        {"name":"동그라미 김치찌개","lat":37.473724,"lng":126.888950,"cat":"찌개","dist":"341m","menu":"김치찌개, 된장찌개"},
+        {"name":"오한수우육면가","lat":37.473703,"lng":126.888871,"cat":"면","dist":"344m","menu":"우육탕면"},
+        {"name":"신전떡볶이","lat":37.473635,"lng":126.888748,"cat":"분식","dist":"354m","menu":"떡볶이, 튀김"},
+        {"name":"마이푸드","lat":37.476652,"lng":126.885938,"cat":"뷔페","dist":"334m","menu":"구내식당 뷔페"},
+        {"name":"애슐리퀸즈","lat":37.476269,"lng":126.887158,"cat":"뷔페","dist":"233m","menu":"패밀리 레스토랑"},
+        {"name":"큐큐면관","lat":37.480708,"lng":126.885177,"cat":"중식","dist":"591m","menu":"유니짜장, 탄탄면"},
+        {"name":"자연밥상","lat":37.473857,"lng":126.887292,"cat":"밥","dist":"382m","menu":"한식 백반"},
+        {"name":"진된장","lat":37.480679,"lng":126.885032,"cat":"찌개","dist":"603m","menu":"된장전골"}
     ];
 
     let map;
+    const tooltip = document.getElementById('tooltip');
+
     window.onload = function() {
         const sels = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
         rests.forEach(r => sels.forEach(s => s.add(new Option(`[${r.cat}] ${r.name}`, r.name))));
         
         map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.476742, 126.889731), zoom: 17 });
-        new naver.maps.Marker({ position: new naver.maps.LatLng(37.476742, 126.889731), map: map, icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) } });
-        rests.forEach(r => new naver.maps.Marker({ position: new naver.maps.LatLng(r.lat, r.lng), map: map, icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) } }));
+        
+        // 아스크타워 마커
+        new naver.maps.Marker({ 
+            position: new naver.maps.LatLng(37.476742, 126.889731), map: map, 
+            icon: { content: '<div class="home-marker">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) } 
+        });
+        
+        // 식당 마커 및 툴팁 이벤트 추가
+        rests.forEach(r => {
+            const marker = new naver.maps.Marker({ 
+                position: new naver.maps.LatLng(r.lat, r.lng), map: map, 
+                icon: { content: `<div class="custom-marker">${r.name}</div>`, anchor: new naver.maps.Point(40, 15) } 
+            });
 
+            // [추가] 마우스 오버 이벤트
+            naver.maps.Event.addListener(marker, 'mouseover', function(e) {
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = `
+                    <strong>${r.name}</strong><br>
+                    분류: ${r.cat}<br>
+                    거리: ${r.dist}<br>
+                    메뉴: ${r.menu}
+                `;
+            });
+
+            // [추가] 마우스 이동 이벤트 (커서 따라다니기)
+            naver.maps.Event.addListener(marker, 'mousemove', function(e) {
+                tooltip.style.left = (e.offset.x + 15) + 'px';
+                tooltip.style.top = (e.offset.y + 15) + 'px';
+            });
+
+            // [추가] 마우스 아웃 이벤트
+            naver.maps.Event.addListener(marker, 'mouseout', function(e) {
+                tooltip.style.display = 'none';
+            });
+        });
+
+        // 실시간 투표 연동
         db.ref('lunch_vote').on('value', snap => {
             const data = snap.val() || {};
             for(let i=1; i<=3; i++) {
@@ -153,23 +207,25 @@
                 document.getElementById('menu'+i).value = val;
                 document.getElementById('label'+i).innerText = val || "메뉴 "+i;
             }
-            const tbody = document.getElementById('list'); tbody.innerHTML = '';
+            const tbody = document.getElementById('list'); 
+            tbody.innerHTML = '';
             let counts = {1:0, 2:0, 3:0};
             emps.forEach((name, i) => {
                 const v = data['vote_'+i] || 0;
                 if(v > 0) counts[v]++;
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${name}</td>` + [1,2,3].map(n => `<td><input type="radio" name="v${i}" ${v==n?'checked':''} onclick="vote(${i},${n})"></td>`).join('');
+                tr.innerHTML = `<td>${name}</td>` + 
+                    [1,2,3].map(n => `<td><input type="radio" name="v${i}" ${v==n?'checked':''} onclick="vote(${i},${n})"></td>`).join('');
                 tbody.appendChild(tr);
             });
-            [1,2,3].forEach(n => document.getElementById('c'+n).innerText = `(${counts[n]})`);
+            [1,2,3].forEach(n => document.getElementById('c'+n).innerText = `(${counts[n]}명)`);
         });
     };
 
     function sync() { db.ref('lunch_vote').update({ menu1: document.getElementById('menu1').value, menu2: document.getElementById('menu2').value, menu3: document.getElementById('menu3').value }); }
     function vote(i, v) { db.ref('lunch_vote').update({ ['vote_'+i]: v }); }
     function resetData() { if(confirm("초기화할까요?")) db.ref('lunch_vote').set(null); }
-    function copyData() { navigator.clipboard.writeText(JSON.stringify(rests)).then(() => alert("복사 완료!")); }
+    function copyData() { navigator.clipboard.writeText(JSON.stringify(rests)).then(() => alert("데이터 복사 완료!")); }
 </script>
 </body>
 </html>
