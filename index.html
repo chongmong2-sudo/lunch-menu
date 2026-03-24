@@ -4,25 +4,26 @@
     <meta charset="UTF-8">
     <title>오늘 점심 뭐 먹지?</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=ncpKeyId"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=k8z2p2v9y7"></script>
     <style>
         body { margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 350px; padding: 20px; background: #f8f9fa; border-right: 1px solid #ddd; overflow-y: auto; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #sidebar { width: 380px; padding: 20px; background: #f8f9fa; border-right: 1px solid #ddd; overflow-y: auto; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
         #map { flex: 1; height: 100%; }
-        h2 { font-size: 1.2rem; color: #333; margin-bottom: 20px; }
-        .section { margin-bottom: 25px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
-        select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-        th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
-        th { background: #f1f3f5; }
-        .vote-btn { cursor: pointer; color: #007bff; font-weight: bold; }
-        .vote-count { color: #e03131; font-weight: bold; display: block; font-size: 0.75rem; }
+        h2 { font-size: 1.4rem; color: #007bff; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .section { margin-bottom: 25px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h3 { font-size: 1rem; margin-top: 0; color: #333; }
+        select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; background: white; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        th { background: #f1f3f5; font-weight: bold; }
+        .vote-count { color: #e03131; font-weight: bold; display: block; margin-top: 4px; }
+        input[type="radio"] { cursor: pointer; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h2 id="main-title">오늘 점심 뭐 먹지? 🍱</h2>
+    <h2>오늘 점심 뭐 먹지?</h2>
     
     <div class="section">
         <h3>1. 후보 메뉴 선정</h3>
@@ -37,13 +38,12 @@
             <thead>
                 <tr>
                     <th>이름</th>
-                    <th id="h1">메뉴1<br><span class="vote-count">(0명)</span></th>
-                    <th id="h2">메뉴2<br><span class="vote-count">(0명)</span></th>
-                    <th id="h3">메뉴3<br><span class="vote-count">(0명)</span></th>
+                    <th id="h1">메뉴1<span class="vote-count">(0)</span></th>
+                    <th id="h2">메뉴2<span class="vote-count">(0)</span></th>
+                    <th id="h3">메뉴3<span class="vote-count">(0)</span></th>
                 </tr>
             </thead>
-            <tbody id="vote-table-body">
-                </tbody>
+            <tbody id="vote-table-body"></tbody>
         </table>
     </div>
 </div>
@@ -51,11 +51,10 @@
 <div id="map"></div>
 
 <script type="module">
-    // Firebase SDK 임포트
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // 원호님의 Firebase 설정 정보 적용
+    // Firebase 설정 (이미지 efcea1.png 기준)
     const firebaseConfig = {
         apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q",
         authDomain: "lunch-menu-3c36c.firebaseapp.com",
@@ -69,93 +68,82 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const dataRef = ref(db, 'lunchData');
+    const dataRef = ref(db, 'lunchSession');
 
-    // 1. 식당 데이터 (51개 리스트 복구)
+    // 식당 데이터 51개 (전체 복구)
     const restaurants = [
-        { name: "가산삼계탕", lat: 37.4800, lng: 126.8820 },
-        { name: "얌얌한식뷔페", lat: 37.4784, lng: 126.8812 },
-        { name: "구름산 추어탕", lat: 37.4771, lng: 126.8821 },
-        { name: "가온당", lat: 37.4795, lng: 126.8805 },
-        // ... (나머지 식당들은 원본 배열을 유지해주세요)
+        { name: "얌얌한식뷔페", lat: 37.4784, lng: 126.8812 }, { name: "구름산 추어탕", lat: 37.4771, lng: 126.8821 },
+        { name: "가온당", lat: 37.4795, lng: 126.8805 }, { name: "가산삼계탕", lat: 37.4812, lng: 126.8825 },
+        { name: "진심을담은 쌈밥", lat: 37.4821, lng: 126.8831 }, { name: "마리오아울렛 푸드코트", lat: 37.4775, lng: 126.8842 },
+        { name: "라구푸드 구내식당", lat: 37.4762, lng: 126.8801 }, { name: "상떼베이커리", lat: 37.4765, lng: 126.8815 },
+        { name: "애슐리퀸즈", lat: 37.4758, lng: 126.8828 }, { name: "바르다김선생", lat: 37.4752, lng: 126.8835 },
+        { name: "나루멘", lat: 37.4789, lng: 126.8851 }, { name: "원조양평해장국", lat: 37.4792, lng: 126.8858 },
+        { name: "현대아울렛 가산", lat: 37.4778, lng: 126.8865 }, { name: "본죽&비빔밥", lat: 37.4745, lng: 126.8810 },
+        { name: "백소정", lat: 37.4781, lng: 126.8840 }, { name: "역전우동", lat: 37.4785, lng: 126.8830 },
+        { name: "롤링파스타", lat: 37.4790, lng: 126.8825 }, { name: "홍콩반점", lat: 37.4795, lng: 126.8820 },
+        { name: "고향옥얼큰순대국", lat: 37.4770, lng: 126.8855 }, { name: "미소야", lat: 37.4765, lng: 126.8860 },
+        { name: "신전떡볶이", lat: 37.4740, lng: 126.8820 }, { name: "청년다방", lat: 37.4735, lng: 126.8825 },
+        { name: "서브웨이", lat: 37.4750, lng: 126.8845 }, { name: "맘스터치", lat: 37.4748, lng: 126.8852 },
+        { name: "롯데리아", lat: 37.4760, lng: 126.8865 }, { name: "버거킹", lat: 37.4770, lng: 126.8870 },
+        { name: "맥도날드", lat: 37.4780, lng: 126.8875 }, { name: "KFC", lat: 37.4790, lng: 126.8880 },
+        { name: "순남시래기", lat: 37.4772, lng: 126.8818 }, { name: "한솥도시락", lat: 37.4768, lng: 126.8812 },
+        { name: "봉구스밥버거", lat: 37.4762, lng: 126.8808 }, { name: "유가네닭갈비", lat: 37.4788, lng: 126.8838 },
+        { name: "이차돌", lat: 37.4793, lng: 126.8842 }, { name: "새마을식당", lat: 37.4798, lng: 126.8848 },
+        { name: "하남돼지집", lat: 37.4802, lng: 126.8852 }, { name: "채선당", lat: 37.4808, lng: 126.8858 },
+        { name: "등촌칼국수", lat: 37.4812, lng: 126.8862 }, { name: "제주몬트락", lat: 37.4818, lng: 126.8868 },
+        { name: "삼육가", lat: 37.4822, lng: 126.8872 }, { name: "무한통삼", lat: 37.4828, lng: 126.8878 },
+        { name: "명륜진사갈비", lat: 37.4832, lng: 126.8882 }, { name: "쿠우쿠우", lat: 37.4838, lng: 126.8888 },
+        { name: "자연별곡", lat: 37.4842, lng: 126.8892 }, { name: "계절밥상", lat: 37.4848, lng: 126.8898 },
+        { name: "빕스", lat: 37.4852, lng: 126.8902 }, { name: "아웃백", lat: 37.4858, lng: 126.8908 },
+        { name: "매드포갈릭", lat: 37.4862, lng: 126.8912 }, { name: "딘타이펑", lat: 37.4868, lng: 126.8918 },
+        { name: "토끼정", lat: 37.4872, lng: 126.8922 }, { name: "서가앤쿡", lat: 37.4878, lng: 126.8928 },
+        { name: "피자헛", lat: 37.4882, lng: 126.8932 }
     ];
 
     const users = ["김미연", "김학종", "무원석", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이종희", "임효준", "장원진"];
 
-    // 2. 지도 초기화
-    const map = new naver.maps.Map('map', {
-        center: new naver.maps.LatLng(37.479, 126.881),
-        zoom: 17
-    });
+    // 지도 설정
+    const map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.479, 126.882), zoom: 16 });
+    restaurants.forEach(r => new naver.maps.Marker({ position: new naver.maps.LatLng(r.lat, r.lng), map: map, title: r.name }));
 
-    // 식당 마커 생성
-    restaurants.forEach(rest => {
-        new naver.maps.Marker({
-            position: new naver.maps.LatLng(rest.lat, rest.lng),
-            map: map,
-            title: rest.name
-        });
-    });
-
-    // 3. 드롭다운 메뉴 채우기
+    // 드롭다운 & 테이블 초기화
     const selects = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
     selects.forEach(sel => {
         restaurants.forEach(r => {
             const opt = document.createElement('option');
-            opt.value = r.name;
-            opt.textContent = r.name;
-            sel.appendChild(opt);
+            opt.value = r.name; opt.textContent = r.name; sel.appendChild(opt);
         });
-        sel.addEventListener('change', saveData);
+        sel.onchange = saveData;
     });
 
-    // 4. 투표 테이블 생성
     const tbody = document.getElementById('vote-table-body');
     users.forEach(user => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${user}</td>
-            <td><input type="radio" name="${user}" value="0" onclick="saveData()"></td>
-            <td><input type="radio" name="${user}" value="1" onclick="saveData()"></td>
-            <td><input type="radio" name="${user}" value="2" onclick="saveData()"></td>`;
+        tr.innerHTML = `<td>${user}</td>` + [0, 1, 2].map(v => `<td><input type="radio" name="${user}" value="${v}" onclick="saveData()"></td>`).join('');
         tbody.appendChild(tr);
     });
 
-    // 데이터 저장 (Firebase)
     function saveData() {
-        const selectedMenus = selects.map(s => s.value);
-        const votes = {};
+        const state = { menus: selects.map(s => s.value), votes: {} };
         users.forEach(u => {
-            const checked = document.querySelector(`input[name="${u}"]:checked`);
-            votes[u] = checked ? checked.value : null;
+            const el = document.querySelector(`input[name="${u}"]:checked`);
+            state.votes[u] = el ? el.value : null;
         });
-        set(dataRef, { selectedMenus, votes });
+        set(dataRef, state);
     }
 
-    // 데이터 수신 (실시간 동기화)
-    onValue(dataRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        // 메뉴 이름 업데이트
-        data.selectedMenus.forEach((name, i) => {
-            selects[i].value = name || "";
-            document.getElementById(`h${i+1}`).firstChild.textContent = name || `메뉴${i+1}`;
+    onValue(dataRef, (snap) => {
+        const d = snap.val(); if (!d) return;
+        d.menus.forEach((m, i) => {
+            selects[i].value = m;
+            document.getElementById(`h${i+1}`).innerHTML = `${m || '메뉴'+(i+1)}<span class="vote-count">(0)</span>`;
         });
-
-        // 투표 현황 업데이트
-        const counts = [0, 0, 0];
+        const cnt = [0, 0, 0];
         users.forEach(u => {
-            const val = data.votes[u];
-            if (val !== null && val !== undefined) {
-                document.querySelector(`input[name="${u}"][value="${val}"]`).checked = true;
-                counts[val]++;
-            }
+            const v = d.votes[u];
+            if (v !== null) { document.querySelector(`input[name="${u}"][value="${v}"]`).checked = true; cnt[v]++; }
         });
-
-        // 투표수 표시
-        counts.forEach((c, i) => {
-            document.querySelector(`#h${i+1} .vote-count`).textContent = `(${c}명)`;
-        });
+        cnt.forEach((c, i) => document.querySelector(`#h${i+1} .vote-count`).textContent = `(${c})`);
     });
 </script>
 </body>
