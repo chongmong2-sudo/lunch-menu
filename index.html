@@ -21,7 +21,8 @@
         
         .voting-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .voting-table th, .voting-table td { border: 1px solid var(--border); padding: 8px 4px; text-align: center; }
-        .voting-table th { background: #f9f9f9; }
+        .voting-table th { background: #f9f9f9; font-weight: 700; }
+        .menu-label { color: var(--danger); display: block; font-size: 11px; margin-top: 2px; }
 
         #bottom-info-panel { padding: 15px; background: #fff; border-top: 3px solid var(--primary); min-height: 250px; display: none; }
         .info-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 10px; }
@@ -63,7 +64,14 @@
         <div class="section">
             <div class="section-title">2. 실시간 투표 현황 (11명)</div>
             <table class="voting-table">
-                <thead><tr><th>이름</th><th>1</th><th>2</th><th>3</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th style="width:25%;">이름</th>
+                        <th style="width:25%;">메뉴 1<span id="label-m1" class="menu-label">-</span></th>
+                        <th style="width:25%;">메뉴 2<span id="label-m2" class="menu-label">-</span></th>
+                        <th style="width:25%;">메뉴 3<span id="label-m3" class="menu-label">-</span></th>
+                    </tr>
+                </thead>
                 <tbody id="list"></tbody>
             </table>
         </div>
@@ -87,15 +95,12 @@
 </div>
 
 <script>
-    // Firebase 설정
     const firebaseConfig = { apiKey: "AIzaSyAcyRvDUV67IJi3o8Z1Dl2tDHBATCN_d4Q", authDomain: "lunch-menu-3c36c.firebaseapp.com", databaseURL: "https://lunch-menu-3c36c-default-rtdb.firebaseio.com", projectId: "lunch-menu-3c36c", storageBucket: "lunch-menu-3c36c.appspot.com", messagingSenderId: "498939490952", appId: "1:498939490952:web:9849dd97c3089a153a253d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // 명단 수정: 임호준
     const emps = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
     
-    // 식당 데이터 60개 전체 (생략 없음)
     const rests = [
         {"name":"얌얌한식뷔페","lat":37.476515,"lng":126.889612,"cat":"뷔페","dist":"10m","menu":"한식뷔페","rate":"83.75","tel":"010-5453-1253","addr":"아스크타워 2층","note":"구내식당"},
         {"name":"무스탕키친","lat":37.476927,"lng":126.889926,"cat":"인도네팔","dist":"10m","menu":"커리","rate":"82","tel":"0507-1315-4575","addr":"아스크타워","note":"저녁만 영업"},
@@ -134,7 +139,7 @@
         {"name":"싸다김밥","lat":37.475152,"lng":126.890561,"cat":"분식","dist":"170m","menu":"김밥,분식","rate":"-","tel":"02-859-8887","addr":"가산센트럴","note":""},
         {"name":"맘스터치","lat":37.475314,"lng":126.890451,"cat":"양식","dist":"190m","menu":"버거","rate":"-","tel":"02-855-7776","addr":"가산센트럴","note":""},
         {"name":"서울막창","lat":37.475110,"lng":126.890632,"cat":"고기","dist":"200m","menu":"뚝곱창,막국수","rate":"-","tel":"02-808-5837","addr":"가산센트럴","note":""},
-        {"name":"마라홀릭","lat":37.475067,"lng":126.890650,"cat":"중식","dist":"210m","menu":"마라탕","rate":"-","tel":"0507-1381-7539","addr":"가산센럴","note":""},
+        {"name":"마라홀릭","lat":37.475067,"lng":126.890650,"cat":"중식","dist":"210m","menu":"마라탕","rate":"-","tel":"0507-1381-7539","addr":"가산센트럴","note":""},
         {"name":"미분당","lat":37.475008,"lng":126.891136,"cat":"면","dist":"300m","menu":"쌀국수","rate":"91","tel":"02-855-9841","addr":"가산센트럴","note":"양 푸짐"},
         {"name":"정백어가","lat":37.476613,"lng":126.887140,"cat":"밥","dist":"300m","menu":"생선구이","rate":"-","tel":"0507-1322-8522","addr":"가산퍼블릭","note":""},
         {"name":"소요카제","lat":37.475134,"lng":126.891399,"cat":"면","dist":"304m","menu":"라멘","rate":"84","tel":"0507-1480-2988","addr":"가산센트럴","note":""},
@@ -163,25 +168,17 @@
     const popup = document.getElementById('map-popup');
 
     window.onload = function() {
-        // 메뉴 선택 세팅
         const sels = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
         rests.forEach(r => sels.forEach(s => s.add(new Option(`[${r.cat}] ${r.name}`, r.name))));
         
-        // 지도 초기화
-        map = new naver.maps.Map('map', { 
-            center: new naver.maps.LatLng(37.476742, 126.889731), 
-            zoom: 17,
-            zoomControl: true 
-        });
+        map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.476742, 126.889731), zoom: 17 });
 
-        // 아스크타워 마커
         new naver.maps.Marker({
             position: new naver.maps.LatLng(37.476742, 126.889731),
             map: map,
             icon: { content: '<div style="background:#e74c3c; color:white; padding:5px 12px; border-radius:20px; font-weight:700; font-size:13px; box-shadow:2px 2px 5px rgba(0,0,0,0.3);">🚩 아스크타워</div>', anchor: new naver.maps.Point(50, 15) }
         });
 
-        // 식당 마커 생성 및 이벤트
         rests.forEach(r => {
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(r.lat, r.lng),
@@ -214,16 +211,18 @@
             });
         });
 
-        // [복구 완료] 실시간 투표 공유 로직
         db.ref('lunch_vote').on('value', snap => {
             const data = snap.val() || {};
             
-            // 메뉴 동기화
+            // 메뉴 동기화 및 라벨 업데이트 (복구 포인트)
             document.getElementById('menu1').value = data.menu1 || "";
             document.getElementById('menu2').value = data.menu2 || "";
             document.getElementById('menu3').value = data.menu3 || "";
+            
+            document.getElementById('label-m1').innerText = data.menu1 || "-";
+            document.getElementById('label-m2').innerText = data.menu2 || "-";
+            document.getElementById('label-m3').innerText = data.menu3 || "-";
 
-            // 투표 현황 동기화
             const tbody = document.getElementById('list'); 
             tbody.innerHTML = '';
             emps.forEach((name, i) => {
@@ -244,13 +243,8 @@
         }); 
     }
     
-    function vote(i, v) { 
-        db.ref('lunch_vote').update({ ['vote_'+i]: v }); 
-    }
-    
-    function resetData() { 
-        if(confirm("모든 데이터를 초기화하시겠습니까?")) db.ref('lunch_vote').set(null); 
-    }
+    function vote(i, v) { db.ref('lunch_vote').update({ ['vote_'+i]: v }); }
+    function resetData() { if(confirm("초기화?")) db.ref('lunch_vote').set(null); }
 </script>
 </body>
 </html>
