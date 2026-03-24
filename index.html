@@ -20,7 +20,6 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
-
         .left-panel { width: var(--panel-width); background: white; box-shadow: 2px 0 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; z-index: 10; }
         .header { padding: 16px 20px; background: var(--primary); color: white; text-align: center; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0; }
         .scroll-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
@@ -38,7 +37,6 @@
         .voting-table th { background: #f5f5f5; font-weight: 700; }
         .vote-count { display: block; font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 700; }
         input[type="radio"] { cursor: pointer; transform: scale(1.2); accent-color: var(--primary); }
-
         .detail-panel { flex-shrink: 0; background: white; border-top: 2px solid var(--primary); overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s; opacity: 0; }
         .detail-panel.open { max-height: 480px; opacity: 1; }
         .detail-inner { padding: 16px 18px 18px; }
@@ -60,29 +58,14 @@
         .naver-btn:hover { background: #02a84a; }
         .naver-btn.menu-btn { background: #FF6B35; }
         .naver-btn.menu-btn:hover { background: #e55a28; }
-
-        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
-        .spinner { width: 36px; height: 36px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        #loading-overlay p { font-size: 14px; color: var(--text-muted); }
-        #loading-progress { font-size: 13px; color: var(--primary); font-weight: 700; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         .right-panel { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-
         .custom-marker { background: white; border: 2px solid var(--primary); border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.18s; white-space: nowrap; color: var(--text); font-family: 'Noto Sans KR', sans-serif; }
         .custom-marker:hover, .custom-marker.active { background: var(--primary); color: white; transform: scale(1.08); box-shadow: 0 4px 12px rgba(74,144,226,0.4); }
-        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px rgba(231,76,60,0.4); white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+        .home-marker { background: #e74c3c; color: white; border: 2px solid #c0392b; border-radius: 20px; padding: 5px 13px; font-size: 13px; font-weight: 700; box-shadow: 0 3px 10px rgba(231,76,60,0.5); white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
     </style>
 </head>
 <body>
-
-<div id="loading-overlay">
-    <div class="spinner"></div>
-    <p>식당 위치를 불러오는 중...</p>
-    <p id="loading-progress">0 / 60</p>
-</div>
-
 <div class="left-panel">
     <div class="header">🍱 오늘 점심 뭐 먹지?</div>
     <div class="scroll-area">
@@ -118,7 +101,7 @@
                 <div class="detail-rating" id="d-rating"></div>
                 <div class="detail-grid">
                     <div class="detail-item"><div class="detail-item-label">분류</div><div class="detail-item-value" id="d-category"></div></div>
-                    <div class="detail-item"><div class="detail-item-label">거리</div><div class="detail-item-value" id="d-distance"></div></div>
+                    <div class="detail-item"><div class="detail-item-label">아스크타워 기준</div><div class="detail-item-value" id="d-distance"></div></div>
                     <div class="detail-item" style="grid-column:1/-1;"><div class="detail-item-label">전화</div><div class="detail-item-value" id="d-phone"></div></div>
                 </div>
                 <div class="detail-menu-section">
@@ -133,84 +116,92 @@
         </div>
     </div>
 </div>
-
 <div class="right-panel"><div id="map"></div></div>
 
 <script>
-    // 아스크타워 (회사 기준점)
-    const ASKTOWER = { lat: 37.48104, lng: 126.88261, placeId: "1533528834" };
+    // 아스크타워 기준점
+    const ASKTOWER_LAT = 37.48104;
+    const ASKTOWER_LNG = 126.88261;
 
     const restaurants = [
-        { name: "얌얌한식뷔페", menu: "한식뷔페", category: "뷔페", distance: "10m", rating: "83.75", phone: "010-5453-1253", placeId: "2038586814" },
-        { name: "무스탕키친", menu: "커리", category: "인도네팔", distance: "10m", rating: "82", phone: "0507-1315-4575", placeId: "2145572206" },
-        { name: "도쎄프멕시칸", menu: "타코, 브리또, 퀘사디아", category: "남미음식", distance: "15m", rating: "85", phone: "02-3467-4569", placeId: "1962876645" },
-        { name: "가온담", menu: "감자탕", category: "국, 탕, 찌개", distance: "20m", rating: "86.5", phone: "02-3467-4530", placeId: "2036399312" },
-        { name: "구름산 추어탕", menu: "추어탕", category: "국밥", distance: "20m", rating: "88", phone: "0507-1490-4549", placeId: "2025013395" },
-        { name: "토리키치", menu: "야키토리동, 쿠시카츠", category: "일본식 덮밥", distance: "20m", rating: "80", phone: "02-2686-8585", placeId: "2069800270" },
-        { name: "삼교리동치미막국수", menu: "막국수, 육개장", category: "면", distance: "25m", rating: "85", phone: "02-3467-4568", placeId: "2043678907" },
-        { name: "세븐볶음", menu: "제육, 오징어 직화볶음", category: "밥", distance: "30m", rating: "85", phone: "02-3467-4797", placeId: "2015237914" },
-        { name: "오투닭갈비&부대찌개", menu: "닭갈비, 부대찌개, 막국수", category: "고기", distance: "38m", rating: "83", phone: "02-3467-4548", placeId: "2096471239" },
-        { name: "맛깔참죽 완도미역", menu: "죽, 뚝배기밥, 덮밥", category: "죽", distance: "40m", rating: "84", phone: "02-3467-4585", placeId: "2089583017" },
-        { name: "착한소있소", menu: "갈비탕, 국밥, 비빔밥", category: "국, 탕, 찌개", distance: "41m", rating: "85", phone: "0507-1446-9299", placeId: "1938160274" },
-        { name: "명자수제돈까스", menu: "돈까스, 우동", category: "일식", distance: "41m", rating: "88.5", phone: "0507-1446-6188", placeId: "1119013682" },
-        { name: "용", menu: "짜장, 짬뽕, 탕수육", category: "중식", distance: "42m", rating: "89", phone: "0507-1419-3469", placeId: "1311928970" },
-        { name: "개성손만두요리전문점", menu: "만두전골, 찐만두", category: "국, 탕, 찌개", distance: "43m", rating: "90", phone: "0507-1439-8886", placeId: "38693015" },
-        { name: "명가순대국", menu: "순대국, 감자탕", category: "국, 탕, 찌개", distance: "50m", rating: "85", phone: "070-8259-1235", placeId: "13161100" },
-        { name: "밥생선구이", menu: "생선구이, 찌개, 탕, 두루치기", category: "밥", distance: "55m", rating: "80", phone: "02-853-8776", placeId: "1077539258" },
-        { name: "춘천옥", menu: "보쌈정식, 막국수", category: "밥", distance: "70m", rating: "88", phone: "02-868-9937", placeId: "187013117" },
-        { name: "더덕솥뚜껑삼겹살", menu: "된장, 순두부, 비빔밥, 생선구이", category: "밥", distance: "84m", rating: "-", phone: "02-868-9592", placeId: "1499785400" },
-        { name: "삼복토종닭도리탕", menu: "닭도리탕, 동태탕, 알탕, 김치전골", category: "국, 탕, 찌개", distance: "90m", rating: "-", phone: "0507-1371-0238", placeId: "1322760349" },
-        { name: "민속식당", menu: "칼국수, 수제비, 보리밥, 냉면", category: "면", distance: "100m", rating: "83", phone: "-", placeId: "1077459866" },
-        { name: "단정 현대아울렛 가산", menu: "솥밥", category: "밥", distance: "100m", rating: "86.5", phone: "010-8838-3987", placeId: "1055353886" },
-        { name: "북창동순두부", menu: "다양한 한상 차림", category: "밥", distance: "100m", rating: "-", phone: "0507-1363-0269", placeId: "1242504899" },
-        { name: "사월에보리밥과쭈꾸미", menu: "보리한상, 쭈꾸미한상", category: "밥, 찌개", distance: "100m", rating: "90", phone: "02-2136-9957", placeId: "1538522840" },
-        { name: "두끼", menu: "분식 뷔페", category: "분식", distance: "100m", rating: "82.6", phone: "02-2136-9960", placeId: "1769151153" },
-        { name: "백초밥", menu: "초밥", category: "일식", distance: "100m", rating: "-", phone: "0507-1429-9959", placeId: "2011921726" },
-        { name: "마치다쇼텐 마리오아울렛 본점", menu: "라멘", category: "일식", distance: "100m", rating: "-", phone: "0507-1321-7493", placeId: "1498991915" },
-        { name: "광화문미진", menu: "덮밥, 우동, 돈까스, 메밀", category: "면", distance: "100m", rating: "-", phone: "0507-1469-9907", placeId: "1382739399" },
-        { name: "101번지남산돈까스", menu: "돈까스, 덮밥, 쫄면, 우동", category: "일식", distance: "100m", rating: "88", phone: "02-2136-9958", placeId: "1336727732" },
-        { name: "니뽕내뽕", menu: "다양한 짬뽕, 피자, 리조또", category: "중식", distance: "100m", rating: "-", phone: "02-2136-9963", placeId: "37604881" },
-        { name: "전주식당", menu: "백반, 김치찌개, 된장찌개", category: "밥", distance: "101m", rating: "-", phone: "02-853-0302", placeId: "2140477547" },
-        { name: "보경닭한마리삼계탕", menu: "닭볶음탕, 삼계탕, 추어탕, 닭개장", category: "국, 탕, 찌개", distance: "105m", rating: "-", phone: "02-865-8461", placeId: "38415674" },
-        { name: "연식당순대국", menu: "순대국", category: "국, 탕, 찌개", distance: "110m", rating: "-", phone: "0507-1426-5188", placeId: "1957765042" },
-        { name: "역전우동", menu: "우동, 소바, 돈까스, 덮밥", category: "일식", distance: "140m", rating: "-", phone: "02-862-0101", placeId: "1263116097" },
-        { name: "한솥도시락 가산센트럴점", menu: "밥, 까스, 찌개", category: "밥", distance: "150m", rating: "-", phone: "02-855-1117", placeId: "1090467229" },
-        { name: "싸다김밥가산푸르지오시티점", menu: "김밥, 우동, 분식", category: "밥", distance: "170m", rating: "-", phone: "02-859-8887", placeId: "1895639193" },
-        { name: "맘스터치 가산센트럴점", menu: "버거", category: "양식", distance: "190m", rating: "-", phone: "02-855-7776", placeId: "1757084493" },
-        { name: "서울막창", menu: "뚝곱창, 뚝배기, 물/비빔 막국수", category: "밥, 면", distance: "200m", rating: "-", phone: "02-808-5837", placeId: "1795436963" },
-        { name: "마라홀릭 마라탕", menu: "마라탕", category: "국, 탕, 찌개", distance: "210m", rating: "-", phone: "0507-1381-7539", placeId: "1429342749" },
-        { name: "미분당", menu: "쌀국수", category: "면", distance: "300m", rating: "91", phone: "02-855-9841", placeId: "1665146932" },
-        { name: "정백어가", menu: "생선구이 정식", category: "밥", distance: "300m", rating: "-", phone: "0507-1322-8522", placeId: "1513961924" },
-        { name: "소요카제 라멘", menu: "라멘", category: "면", distance: "304m", rating: "84", phone: "0507-1480-2988", placeId: "1148683048" },
-        { name: "본래순대", menu: "순대국, 뼈해장국", category: "국, 탕, 찌개", distance: "305m", rating: "-", phone: "02-6230-5556", placeId: "1942838523" },
-        { name: "진케이", menu: "초밥, 돈까스, 참치 김치찌개", category: "일식", distance: "305m", rating: "70", phone: "02-852-9892", placeId: "117554783" },
-        { name: "반마리찜닭애 반찜", menu: "찜닭, 닭볶음탕", category: "밥", distance: "308m", rating: "-", phone: "-", placeId: "1517497605" },
-        { name: "본죽&비빔밥", menu: "다양한 죽", category: "죽", distance: "310m", rating: "-", phone: "0507-1481-5522", placeId: "1983914774" },
-        { name: "포빈", menu: "쌀국수, 볶음밥, 분짜", category: "밥, 면", distance: "320m", rating: "84", phone: "0507-1409-2085", placeId: "1288363622" },
-        { name: "보승회관", menu: "국밥, 냉면", category: "밥, 면, 탕", distance: "325m", rating: "-", phone: "02-6230-6789", placeId: "1358036124" },
-        { name: "조려당", menu: "두부조림, 북어국", category: "면", distance: "338m", rating: "-", phone: "02-2085-0127", placeId: "2089569470" },
-        { name: "소플러스", menu: "솥밥", category: "고기, 찌개", distance: "340m", rating: "84", phone: "-", placeId: "1048995641" },
-        { name: "담소소사골순대육개장", menu: "순두부, 순대국, 육개장", category: "국, 탕, 찌개", distance: "340m", rating: "-", phone: "02-2085-0151", placeId: "1305970950" },
-        { name: "궁정짬뽕", menu: "짜장, 짬뽕, 탕수육", category: "중식", distance: "345m", rating: "92", phone: "02-2085-0119", placeId: "1069079978" },
-        { name: "새벽집", menu: "청국장, 순두부, 찌개", category: "밥", distance: "348m", rating: "-", phone: "0507-1374-0180", placeId: "1258624016" },
-        { name: "동그라미 김치찌개삼겹살", menu: "김치/된장/부대 찌개, 불고기", category: "밥", distance: "350m", rating: "90", phone: "0507-1335-0137", placeId: "1998006286" },
-        { name: "오한수우육면가", menu: "우육탕, 도가니탕", category: "면", distance: "352m", rating: "-", phone: "0507-1402-0184", placeId: "1046477869" },
-        { name: "신전떡볶이", menu: "떡튀순", category: "분식", distance: "355m", rating: "93", phone: "0507-1392-8259", placeId: "33704297" },
-        { name: "마이푸드 구내식당", menu: "한식뷔페", category: "뷔페", distance: "370m", rating: "90", phone: "-", placeId: "2031045305" },
-        { name: "애슐리퀸즈", menu: "뷔페", category: "뷔페", distance: "380m", rating: "-", phone: "-", placeId: "1611381835" },
-        { name: "큐큐면관", menu: "짜장, 짬뽕, 탕수육", category: "중식", distance: "380m", rating: "-", phone: "0507-1401-5050", placeId: "1550173990" },
-        { name: "자연밥상", menu: "이것저것 많음", category: "밥", distance: "450m", rating: "86.5", phone: "02-869-4578", placeId: "1112254054" },
-        { name: "진심담은 된장찌개 진된장", menu: "봄동 비빔밥, 된장전골, 칼비빔면", category: "찌개", distance: "580m", rating: "93", phone: "0507-1469-0429", placeId: "1308989777" },
+        { name: "얌얌한식뷔페",          menu: "한식뷔페",                   category: "뷔페",        distance: "10m",  rating: "83.75", phone: "010-5453-1253", placeId: "2038586814", lat: 37.48120, lng: 126.88270 },
+        { name: "무스탕키친",            menu: "커리",                      category: "인도네팔",     distance: "10m",  rating: "82",    phone: "0507-1315-4575", placeId: "2145572206", lat: 37.48118, lng: 126.88265 },
+        { name: "도쎄프멕시칸",           menu: "타코, 브리또, 퀘사디아",       category: "남미음식",     distance: "15m",  rating: "85",    phone: "02-3467-4569",  placeId: "1962876645", lat: 37.48098, lng: 126.88248 },
+        { name: "가온담",               menu: "감자탕",                    category: "국, 탕, 찌개", distance: "20m",  rating: "86.5",  phone: "02-3467-4530",  placeId: "2036399312", lat: 37.48085, lng: 126.88275 },
+        { name: "구름산 추어탕",          menu: "추어탕",                    category: "국밥",        distance: "20m",  rating: "88",    phone: "0507-1490-4549", placeId: "2025013395", lat: 37.48130, lng: 126.88255 },
+        { name: "토리키치",              menu: "야키토리동, 쿠시카츠",          category: "일본식 덮밥",  distance: "20m",  rating: "80",    phone: "02-2686-8585",  placeId: "2069800270", lat: 37.48112, lng: 126.88290 },
+        { name: "삼교리동치미막국수",       menu: "막국수, 육개장",              category: "면",         distance: "25m",  rating: "85",    phone: "02-3467-4568",  placeId: "2043678907", lat: 37.48075, lng: 126.88285 },
+        { name: "세븐볶음",              menu: "제육, 오징어 직화볶음",         category: "밥",         distance: "30m",  rating: "85",    phone: "02-3467-4797",  placeId: "2015237914", lat: 37.48135, lng: 126.88240 },
+        { name: "오투닭갈비&부대찌개",      menu: "닭갈비, 부대찌개, 막국수",     category: "고기",        distance: "38m",  rating: "83",    phone: "02-3467-4548",  placeId: "2096471239", lat: 37.48140, lng: 126.88295 },
+        { name: "맛깔참죽 완도미역",        menu: "죽, 뚝배기밥, 덮밥",          category: "죽",         distance: "40m",  rating: "84",    phone: "02-3467-4585",  placeId: "2089583017", lat: 37.48065, lng: 126.88260 },
+        { name: "착한소있소",             menu: "갈비탕, 국밥, 비빔밥",         category: "국, 탕, 찌개", distance: "41m",  rating: "85",    phone: "0507-1446-9299", placeId: "1938160274", lat: 37.48145, lng: 126.88310 },
+        { name: "명자수제돈까스",          menu: "돈까스, 우동",               category: "일식",        distance: "41m",  rating: "88.5",  phone: "0507-1446-6188", placeId: "1119013682", lat: 37.48060, lng: 126.88300 },
+        { name: "용",                  menu: "짜장, 짬뽕, 탕수육",           category: "중식",        distance: "42m",  rating: "89",    phone: "0507-1419-3469", placeId: "1311928970", lat: 37.48155, lng: 126.88230 },
+        { name: "개성손만두요리전문점",      menu: "만두전골, 찐만두",             category: "국, 탕, 찌개", distance: "43m",  rating: "90",    phone: "0507-1439-8886", placeId: "38693015",   lat: 37.48160, lng: 126.88275 },
+        { name: "명가순대국",             menu: "순대국, 감자탕",              category: "국, 탕, 찌개", distance: "50m",  rating: "85",    phone: "070-8259-1235", placeId: "13161100",   lat: 37.48050, lng: 126.88310 },
+        { name: "밥생선구이",             menu: "생선구이, 찌개, 탕, 두루치기",  category: "밥",         distance: "55m",  rating: "80",    phone: "02-853-8776",   placeId: "1077539258", lat: 37.48165, lng: 126.88255 },
+        { name: "춘천옥",               menu: "보쌈정식, 막국수",             category: "밥",         distance: "70m",  rating: "88",    phone: "02-868-9937",   placeId: "187013117",  lat: 37.48170, lng: 126.88285 },
+        { name: "더덕솥뚜껑삼겹살",        menu: "된장, 순두부, 비빔밥, 생선구이", category: "밥",         distance: "84m",  rating: "-",     phone: "02-868-9592",   placeId: "1499785400", lat: 37.48175, lng: 126.88265 },
+        { name: "삼복토종닭도리탕",         menu: "닭도리탕, 동태탕, 알탕, 김치전골", category: "국, 탕, 찌개", distance: "90m", rating: "-",     phone: "0507-1371-0238", placeId: "1322760349", lat: 37.48180, lng: 126.88245 },
+        { name: "민속식당",              menu: "칼국수, 수제비, 보리밥, 냉면",  category: "면",         distance: "100m", rating: "83",    phone: "-",             placeId: "1077459866", lat: 37.47720, lng: 126.88950 },
+        { name: "단정 현대아울렛 가산",     menu: "솥밥",                     category: "밥",         distance: "100m", rating: "86.5",  phone: "010-8838-3987", placeId: "1055353886", lat: 37.47700, lng: 126.88960 },
+        { name: "북창동순두부",            menu: "다양한 한상 차림",            category: "밥",         distance: "100m", rating: "-",     phone: "0507-1363-0269", placeId: "1242504899", lat: 37.47710, lng: 126.88970 },
+        { name: "사월에보리밥과쭈꾸미",      menu: "보리한상, 쭈꾸미한상",         category: "밥, 찌개",   distance: "100m", rating: "90",    phone: "02-2136-9957",  placeId: "1538522840", lat: 37.47695, lng: 126.88980 },
+        { name: "두끼",                 menu: "분식 뷔페",                  category: "분식",        distance: "100m", rating: "82.6",  phone: "02-2136-9960",  placeId: "1769151153", lat: 37.47730, lng: 126.88940 },
+        { name: "백초밥",               menu: "초밥",                      category: "일식",        distance: "100m", rating: "-",     phone: "0507-1429-9959", placeId: "2011921726", lat: 37.47685, lng: 126.88990 },
+        { name: "마치다쇼텐 마리오아울렛 본점", menu: "라멘",                  category: "일식",        distance: "100m", rating: "-",     phone: "0507-1321-7493", placeId: "1498991915", lat: 37.47675, lng: 126.89000 },
+        { name: "광화문미진",             menu: "덮밥, 우동, 돈까스, 메밀",    category: "면",         distance: "100m", rating: "-",     phone: "0507-1469-9907", placeId: "1382739399", lat: 37.47665, lng: 126.89010 },
+        { name: "101번지남산돈까스",       menu: "돈까스, 덮밥, 쫄면, 우동",    category: "일식",        distance: "100m", rating: "88",    phone: "02-2136-9958",  placeId: "1336727732", lat: 37.47655, lng: 126.89020 },
+        { name: "니뽕내뽕",              menu: "다양한 짬뽕, 피자, 리조또",     category: "중식",        distance: "100m", rating: "-",     phone: "02-2136-9963",  placeId: "37604881",   lat: 37.47645, lng: 126.89030 },
+        { name: "전주식당",              menu: "백반, 김치찌개, 된장찌개",      category: "밥",         distance: "101m", rating: "-",     phone: "02-853-0302",   placeId: "2140477547", lat: 37.48050, lng: 126.88240 },
+        { name: "보경닭한마리삼계탕",       menu: "닭볶음탕, 삼계탕, 추어탕, 닭개장", category: "국, 탕, 찌개", distance: "105m", rating: "-",   phone: "02-865-8461",   placeId: "38415674",   lat: 37.48040, lng: 126.88225 },
+        { name: "연식당순대국",            menu: "순대국",                    category: "국, 탕, 찌개", distance: "110m", rating: "-",     phone: "0507-1426-5188", placeId: "1957765042", lat: 37.48035, lng: 126.88210 },
+        { name: "역전우동",              menu: "우동, 소바, 돈까스, 덮밥",     category: "일식",        distance: "140m", rating: "-",     phone: "02-862-0101",   placeId: "1263116097", lat: 37.48015, lng: 126.88195 },
+        { name: "한솥도시락 가산센트럴점",   menu: "밥, 까스, 찌개",            category: "밥",         distance: "150m", rating: "-",     phone: "02-855-1117",   placeId: "1090467229", lat: 37.47995, lng: 126.88180 },
+        { name: "싸다김밥가산푸르지오시티점", menu: "김밥, 우동, 분식",           category: "밥",         distance: "170m", rating: "-",     phone: "02-859-8887",   placeId: "1895639193", lat: 37.47975, lng: 126.88165 },
+        { name: "맘스터치 가산센트럴점",    menu: "버거",                     category: "양식",        distance: "190m", rating: "-",     phone: "02-855-7776",   placeId: "1757084493", lat: 37.47955, lng: 126.88150 },
+        { name: "서울막창",              menu: "뚝곱창, 뚝배기, 물/비빔 막국수", category: "밥, 면",     distance: "200m", rating: "-",     phone: "02-808-5837",   placeId: "1795436963", lat: 37.47935, lng: 126.88135 },
+        { name: "마라홀릭 마라탕",         menu: "마라탕",                    category: "국, 탕, 찌개", distance: "210m", rating: "-",     phone: "0507-1381-7539", placeId: "1429342749", lat: 37.47915, lng: 126.88120 },
+        { name: "미분당",               menu: "쌀국수",                    category: "면",         distance: "300m", rating: "91",    phone: "02-855-9841",   placeId: "1665146932", lat: 37.47850, lng: 126.88090 },
+        { name: "정백어가",              menu: "생선구이 정식",               category: "밥",         distance: "300m", rating: "-",     phone: "0507-1322-8522", placeId: "1513961924", lat: 37.47860, lng: 126.88490 },
+        { name: "소요카제 라멘",           menu: "라멘",                     category: "면",         distance: "304m", rating: "84",    phone: "0507-1480-2988", placeId: "1148683048", lat: 37.47840, lng: 126.88075 },
+        { name: "본래순대",              menu: "순대국, 뼈해장국",             category: "국, 탕, 찌개", distance: "305m", rating: "-",     phone: "02-6230-5556",  placeId: "1942838523", lat: 37.47930, lng: 126.88490 },
+        { name: "진케이",               menu: "초밥, 돈까스, 참치 김치찌개",   category: "일식",        distance: "305m", rating: "70",    phone: "02-852-9892",   placeId: "117554783",  lat: 37.47830, lng: 126.88060 },
+        { name: "반마리찜닭애 반찜",        menu: "찜닭, 닭볶음탕",             category: "밥",         distance: "308m", rating: "-",     phone: "-",             placeId: "1517497605", lat: 37.47920, lng: 126.88480 },
+        { name: "본죽&비빔밥",            menu: "다양한 죽",                 category: "죽",         distance: "310m", rating: "-",     phone: "0507-1481-5522", placeId: "1983914774", lat: 37.47910, lng: 126.88470 },
+        { name: "포빈",                 menu: "쌀국수, 볶음밥, 분짜",         category: "밥, 면",     distance: "320m", rating: "84",    phone: "0507-1409-2085", placeId: "1288363622", lat: 37.47900, lng: 126.88460 },
+        { name: "보승회관",              menu: "국밥, 냉면",                 category: "밥, 면, 탕", distance: "325m", rating: "-",     phone: "02-6230-6789",  placeId: "1358036124", lat: 37.47890, lng: 126.88450 },
+        { name: "조려당",               menu: "두부조림, 북어국",             category: "면",         distance: "338m", rating: "-",     phone: "02-2085-0127",  placeId: "2089569470", lat: 37.47830, lng: 126.88430 },
+        { name: "소플러스",              menu: "솥밥",                     category: "고기, 찌개",  distance: "340m", rating: "84",    phone: "-",             placeId: "1048995641", lat: 37.47820, lng: 126.88420 },
+        { name: "담소소사골순대육개장",      menu: "순두부, 순대국, 육개장",        category: "국, 탕, 찌개", distance: "340m", rating: "-",   phone: "02-2085-0151",  placeId: "1305970950", lat: 37.47815, lng: 126.88415 },
+        { name: "궁정짬뽕",              menu: "짜장, 짬뽕, 탕수육",           category: "중식",        distance: "345m", rating: "92",    phone: "02-2085-0119",  placeId: "1069079978", lat: 37.47810, lng: 126.88410 },
+        { name: "새벽집",               menu: "청국장, 순두부, 찌개",          category: "밥",         distance: "348m", rating: "-",     phone: "0507-1374-0180", placeId: "1258624016", lat: 37.47805, lng: 126.88405 },
+        { name: "동그라미 김치찌개삼겹살",   menu: "김치/된장/부대 찌개, 불고기",   category: "밥",         distance: "350m", rating: "90",    phone: "0507-1335-0137", placeId: "1998006286", lat: 37.47800, lng: 126.88400 },
+        { name: "오한수우육면가",          menu: "우육탕, 도가니탕",             category: "면",         distance: "352m", rating: "-",     phone: "0507-1402-0184", placeId: "1046477869", lat: 37.47795, lng: 126.88395 },
+        { name: "신전떡볶이",             menu: "떡튀순",                    category: "분식",        distance: "355m", rating: "93",    phone: "0507-1392-8259", placeId: "33704297",   lat: 37.47790, lng: 126.88390 },
+        { name: "마이푸드 구내식당",        menu: "한식뷔페",                  category: "뷔페",        distance: "370m", rating: "90",    phone: "-",             placeId: "2031045305", lat: 37.47780, lng: 126.88350 },
+        { name: "애슐리퀸즈",             menu: "뷔페",                     category: "뷔페",        distance: "380m", rating: "-",     phone: "-",             placeId: "1611381835", lat: 37.47760, lng: 126.88470 },
+        { name: "큐큐면관",              menu: "짜장, 짬뽕, 탕수육",           category: "중식",        distance: "380m", rating: "-",     phone: "0507-1401-5050", placeId: "1550173990", lat: 37.47750, lng: 126.88460 },
+        { name: "자연밥상",              menu: "이것저것 많음",               category: "밥",         distance: "450m", rating: "86.5",  phone: "02-869-4578",   placeId: "1112254054", lat: 37.47700, lng: 126.88380 },
+        { name: "진심담은 된장찌개 진된장",  menu: "봄동 비빔밥, 된장전골, 칼비빔면", category: "찌개",      distance: "580m", rating: "93",    phone: "0507-1469-0429", placeId: "1308989777", lat: 37.47620, lng: 126.88330 },
     ];
 
     const employees = ["김미연", "김혁중", "류한식", "박윤영", "송원호", "신윤철", "안서형", "우성욱", "이홍비", "임호준", "장현진"];
     let activeMarkerEl = null;
-    let map;
+
+    // 직선거리 계산 (미터)
+    function calcDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+        return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
 
     function initApp() {
         initDropdowns();
         initEmployeeList();
-        loadPlaceCoords();
+        initMap();
     }
 
     function initDropdowns() {
@@ -264,92 +255,41 @@
         document.getElementById('count3').innerText = `(${counts[3]}명)`;
     }
 
-    // 네이버 플레이스 API로 좌표 가져오기
-    async function fetchPlaceCoord(placeId) {
-        try {
-            const res = await fetch(`https://map.naver.com/p/api/place/summary/${placeId}`, {
-                headers: { 'Referer': 'https://map.naver.com' }
-            });
-            if (!res.ok) return null;
-            const data = await res.json();
-            const lat = parseFloat(data.y || data.lat || (data.coordinate && data.coordinate.y));
-            const lng = parseFloat(data.x || data.lng || (data.coordinate && data.coordinate.x));
-            if (lat && lng) return { lat, lng };
-        } catch(e) {}
-        return null;
-    }
-
-    // 직선거리 계산 (미터)
-    function calcDistance(lat1, lng1, lat2, lng2) {
-        const R = 6371000;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
-        return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    }
-
-    async function loadPlaceCoords() {
-        const progressEl = document.getElementById('loading-progress');
-
-        map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(ASKTOWER.lat, ASKTOWER.lng),
+    function initMap() {
+        const map = new naver.maps.Map('map', {
+            center: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
             zoom: 16
         });
 
-        // 아스크타워 마커 먼저 표시
+        // 🏢 아스크타워 마커
         new naver.maps.Marker({
-            position: new naver.maps.LatLng(ASKTOWER.lat, ASKTOWER.lng),
+            position: new naver.maps.LatLng(ASKTOWER_LAT, ASKTOWER_LNG),
             map,
             icon: {
-                content: '<div class="home-marker">🏢 아스크타워 (우리회사)</div>',
-                anchor: new naver.maps.Point(70, 15)
-            }
+                content: '<div class="home-marker">🏢 아스크타워</div>',
+                anchor: new naver.maps.Point(55, 15)
+            },
+            zIndex: 100
         });
 
-        let loaded = 0;
-        const total = restaurants.length;
-
-        // 5개씩 병렬 처리
-        const batchSize = 5;
-        for (let i = 0; i < total; i += batchSize) {
-            const batch = restaurants.slice(i, i + batchSize);
-            await Promise.all(batch.map(async rest => {
-                const coord = await fetchPlaceCoord(rest.placeId);
-                loaded++;
-                progressEl.textContent = `${loaded} / ${total}`;
-                if (coord) {
-                    rest.lat = coord.lat;
-                    rest.lng = coord.lng;
-                    // 아스크타워 기준 직선거리 계산
-                    const dist = calcDistance(ASKTOWER.lat, ASKTOWER.lng, coord.lat, coord.lng);
-                    rest.distanceCalc = dist + 'm (직선)';
-                }
-            }));
-        }
-
-        document.getElementById('loading-overlay').style.display = 'none';
-        addMarkers();
-    }
-
-    function addMarkers() {
-        let successCount = 0;
+        // 식당 마커
         restaurants.forEach(rest => {
-            if (!rest.lat || !rest.lng) return;
-            successCount++;
             const position = new naver.maps.LatLng(rest.lat, rest.lng);
             const markerDiv = document.createElement('div');
             markerDiv.className = 'custom-marker';
             markerDiv.innerText = '📍 ' + rest.name;
+
             const marker = new naver.maps.Marker({
                 position, map,
                 icon: { content: markerDiv, anchor: new naver.maps.Point(60, 15) }
             });
+
             naver.maps.Event.addListener(marker, 'click', function() {
                 map.panTo(position);
                 openDetail(rest, markerDiv);
             });
         });
-        console.log(`마커 ${successCount}/${restaurants.length}개 표시 완료`);
+
         naver.maps.Event.addListener(map, 'click', closeDetail);
     }
 
@@ -361,8 +301,11 @@
         document.getElementById('d-name').innerText = rest.name;
         document.getElementById('d-rating').innerText = rest.rating !== '-' ? `★ ${rest.rating}점` : '평점 정보 없음';
         document.getElementById('d-category').innerText = rest.category;
-        // 계산된 거리가 있으면 표시, 없으면 기존 데이터
-        document.getElementById('d-distance').innerText = rest.distanceCalc || rest.distance;
+
+        // 직선거리 계산
+        const dist = calcDistance(ASKTOWER_LAT, ASKTOWER_LNG, rest.lat, rest.lng);
+        document.getElementById('d-distance').innerText = `약 ${dist}m (직선)`;
+
         document.getElementById('d-phone').innerText = rest.phone !== '-' ? rest.phone : '정보 없음';
 
         const menuContainer = document.getElementById('d-menus');
