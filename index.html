@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘 모먹지? - 식당 관리 보호 버전</title>
+    <title>오늘 모먹지? - 메뉴판 줌 버전</title>
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=z6vojrwz9x"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -67,9 +67,49 @@
 
         .del-btn { color: var(--danger); cursor: pointer; font-size: 11px; margin-left: 5px; font-weight: bold; }
         .fixed-badge { font-size: 10px; color: #94a3b8; margin-left: 5px; }
+
+        /* --- 메뉴판 모달 (줌 기능 포함 전체화면) --- */
+        #menu-modal {
+            display: none; position: fixed; z-index: 3000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);
+            overflow: hidden; touch-action: none;
+        }
+        .modal-header-info {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 20px;
+            color: white; z-index: 3001; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-close { font-size: 35px; font-weight: bold; cursor: pointer; color: #fff; padding: 0 10px; }
+        
+        #zoom-container {
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            cursor: grab; overflow: hidden;
+        }
+        #zoom-container:active { cursor: grabbing; }
+        #modal-img { 
+            max-width: 90%; max-height: 90%; transition: transform 0.1s ease-out; 
+            transform-origin: center; user-select: none; -webkit-user-drag: none;
+        }
+        .zoom-guide {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.7); font-size: 13px; background: rgba(0,0,0,0.5);
+            padding: 8px 16px; border-radius: 20px; pointer-events: none;
+        }
     </style>
 </head>
 <body>
+
+<div id="menu-modal">
+    <div class="modal-header-info">
+        <h3 id="modal-title">메뉴판</h3>
+        <span class="modal-close" onclick="closeMenuModal()">&times;</span>
+    </div>
+    <div id="zoom-container">
+        <img id="modal-img" src="" alt="메뉴판 이미지">
+        <p id="modal-fallback" style="display:none; color: white;">메뉴판 이미지가 없습니다.</p>
+    </div>
+    <div class="zoom-guide">마우스 휠로 확대/축소, 드래그로 이동 가능</div>
+</div>
 
 <div class="left-panel">
     <div class="header">🍱 오늘 모먹지?</div>
@@ -106,7 +146,7 @@
         <div class="info-row"><span class="info-label">상세주소</span> <span id="res-addr">-</span></div>
         <div class="info-btns">
             <a href="#" id="link-map" target="_blank" class="btn-link" style="background: #03C75A;">네이버 지도</a>
-            <a href="#" id="link-menu" target="_blank" class="btn-link" style="background: var(--accent);">메뉴판 보기</a>
+            <button onclick="openMenuModal()" id="link-menu" class="btn-link" style="background: var(--accent);">메뉴판 보기</button>
             <button onclick="deleteRest()" id="btn-delete-rest" class="btn-link" style="background: var(--danger); display:none;">식당 삭제</button>
         </div>
     </div>
@@ -157,7 +197,7 @@
         {"name":"오투닭갈비&부대찌개","lat":37.476856,"lng":126.890232,"cat":"고기","dist":"38m","menu":"닭갈비,부대찌개","rate":"83","tel":"02-3467-4548","addr":"아스크타워","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250703_184%2F1751550960056Q1baK_JPEG%2F%25B8%25DE%25B4%25BA.jpg"},
         {"name":"맛깔참죽 완도미역","lat":37.476785,"lng":126.890280,"cat":"죽","dist":"40m","menu":"죽,뚝배기밥","rate":"84","tel":"02-3467-4585","addr":"아스크타워","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250808_238%2F17545885589889aW3J_JPEG%2F%25B0%25A1%25BB%25EA%25BE%25C6%25BD%25C5%25C1%25A1_%25B8%25DE%25B4%25BA%25C6%25C7.jpg"},
         {"name":"착한소있소","lat":37.477078,"lng":126.890401,"cat":"탕","dist":"41m","menu":"갈비탕,국밥","rate":"85","tel":"0507-1446-9299","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20251219_235%2F1766155323292lt9S2_JPEG%2F1000023368.jpg"},
-        {"name":"명자수제돈까스","lat":37.477189,"lng":126.890241,"cat":"일식","dist":"41m","menu":"돈까스,우동","rate":"88.5","tel":"0507-1446-6188","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNTEyMThfMTEz%2FMDAxNzY2MDMwMDkxMjU5.RPS3SeqRyhP18hlhLl9uuvl6iRgX3mfoOG_nrrfWhqEg.ITaCStLo-GR1e5bo37NzXGCLLBexEuJ_EIsSquZo0NEg.JPEG%2F900%25A3%25DF20251218%25A3%25DF114438.jpg"},
+        {"name":"명자수제돈까스","lat":37.477189,"lng":126.890241,"cat":"일식","dist":"41m","menu":"돈까스,우동","rate":"88.5","tel":"0507-1446-6188","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNTEyMThfMTEz%2FMDAxNzY2MBMwMDkxMjU5.RPS3SeqRyhP18hlhLl9uuvl6iRgX3mfoOG_nrrfWhqEg.ITaCStLo-GR1e5bo37NzXGCLLBexEuJ_EIsSquZo0NEg.JPEG%2F900%25A3%25DF20251218%25A3%25DF114438.jpg"},
         {"name":"용","lat":37.477109,"lng":126.890506,"cat":"중식","dist":"42m","menu":"짜장,짬뽕","rate":"89","tel":"0507-1419-3469","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20240305_168%2F1709623303018qH4qJ_JPEG%2F1709623280118568059656964254783.jpg"},
         {"name":"개성손만두","lat":37.476794,"lng":126.890529,"cat":"만두","dist":"43m","menu":"만두전골","rate":"90","tel":"0507-1439-8886","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20241112_149%2F1731416018986WkpWS_JPEG%2F1000015919.jpg"},
         {"name":"명가순대국","lat":37.477546,"lng":126.889909,"cat":"탕","dist":"50m","menu":"순대국","rate":"85","tel":"070-8259-1235","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20221212_146%2F1670801749876gIXB8_JPEG%2F479759C2-E9D8-4C05-9257-61015793BEE0.jpeg"},
@@ -193,7 +233,7 @@
         {"name":"본죽&비빔밥","lat":37.474614,"lng":126.890289,"cat":"죽","dist":"310m","menu":"죽,비빔밥","rate":"-","tel":"0507-1481-5522","addr":"테라타워","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMjExMDdfMjMz%2FMDAxNjY3ODI3NjIxOTc1.IpLaE-N6V_CcPkebfU_9kivaJKe-dsD75gDitmm8zn8g.IMXTpgS9t4TGAqY-I7GWYkl2xmSQHDwAw0zqsb0Hxpsg.JPEG.hbhz2020%2FIMG_6254.jpg"},
         {"name":"포빈","lat":37.474172,"lng":126.889909,"cat":"면,밥","dist":"320m","menu":"쌀국수","rate":"84","tel":"0507-1409-2085","addr":"테라타워","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20240605_276%2F1717598412738nu4sP_JPEG%2FMenu.jpg"},
         {"name":"보승회관","lat":37.474096,"lng":126.889676,"cat":"국밥","dist":"325m","menu":"국밥,냉면","rate":"-","tel":"02-6230-6789","addr":"테라타워","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20260213_19%2F17709413597272ISum_JPEG%2F%25B0%25A1%25BB%25EA%25B5%25F0%25C1%25F6%25C5%25D0_%25282%2529.jpg"},
-        {"name":"조려당","lat":37.473987,"lng":126.889357,"cat":"밥","dist":"338m","menu":"두부조림","rate":"-","tel":"02-2085-0127","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNjAxMTRfMTYz%2FMDAxNzY4MzgzODI5Nzc2.2caYARNqmStjKRFnTKXlAhtV_fs_uoNuy0qp3_1ikEUg.ZifsXUdgQYGpB1-SbJEB-tcyoJYXzfoeeH3KxknlT0Ig.JPEG%2F900%25A3%25DF20260113%25A3%25DF132620.jpg"},
+        {"name":"조려당","lat":37.473987,"lng":126.889357,"cat":"밥","dist":"338m","menu":"두부조림","rate":"-","tel":"02-2085-0127","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNTAxMTRfMTYz%2FMDAxNzY4MzgzODI5Nzc2.2caYARNqmStjKRFnTKXlAhtV_fs_uoNuy0qp3_1ikEUg.ZifsXUdgQYGpB1-SbJEB-tcyoJYXzfoeeH3KxknlT0Ig.JPEG%2F900%25A3%25DF20260113%25A3%25DF132620.jpg"},
         {"name":"소플러스","lat":37.474071,"lng":126.890126,"cat":"고기","dist":"340m","menu":"솥밥,찌개","rate":"84","tel":"-","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250214_35%2F1739500544358wGKHg_JPEG%2FIMG_3671.jpeg"},
         {"name":"담소소사골순대","lat":37.473942,"lng":126.889373,"cat":"탕","dist":"340m","menu":"순대국,육개장","rate":"-","tel":"02-2085-0151","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250602_180%2F1748826739596lPBTo_JPEG%2F%25B0%25A1%25BB%25EA5%25C8%25A3-06.jpg"},
         {"name":"궁정짬뽕","lat":37.473911,"lng":126.889257,"cat":"중식","dist":"345m","menu":"짬뽕","rate":"92","tel":"02-2085-0119","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20220620_114%2F1655688847598CmMMW_JPEG%2FIMG_8606.jpg"},
@@ -202,7 +242,7 @@
         {"name":"오한수우육면가","lat":37.473703,"lng":126.888871,"cat":"면","dist":"352m","menu":"우육탕면","rate":"-","tel":"0507-1402-0184","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20210331_91%2F1617189976286osm14_JPEG%2FA_X29h0RfbkOAFQ8084aSiSU.jpg"},
         {"name":"신전떡볶이","lat":37.473635,"lng":126.888748,"cat":"분식","dist":"355m","menu":"떡볶이","rate":"93","tel":"0507-1392-8259","addr":"타워클래식","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250619_106%2F1750326613675hBX5U_JPEG%2F1000004576.jpg"},
         {"name":"마이푸드","lat":37.476652,"lng":126.885938,"cat":"뷔페","dist":"370m","menu":"한식뷔페","rate":"90","tel":"-","addr":"벽산디지털5차","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250702_158%2F1751416934934lxhk9_PNG%2FIMG_4008.png"},
-        {"name":"애슐리퀸즈","lat":37.476269,"lng":126.887158,"cat":"뷔페","dist":"380m","menu":"뷔페","rate":"-","tel":"-","addr":"가산퍼블릭","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20240608_168%2F1717840370526RjsY5_JPEG%2F%2528DID_%25BE%25C6%25B4%25D4%2529_%25B3%25D7%25C0%25CC%25B9%25F6%25B0%25D4%25BD%25C3%25BF%25EB_%25C0%25CC%25BF%25F8%25C8%25AD%25B0%25A1%25B0%25D1_%25BE%25C8%25B3%25BB.jpg"},
+        {"name":"애슐리퀸즈","lat":37.476269,"lng":126.887158,"cat":"뷔페","dist":"380m","menu":"뷔페","rate":"-","tel":"-","addr":"가산퍼블릭","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20240608_168%2F1717840370526RjsY5_JPEG%2F%2528DID_%25BE%25C6%25B4%25D4%2529_%25B3%25D7%25C0%25CC%25B9%25F6%25B0%25D4%25BD%25C3%25BF%25EB_%25C0%25CC%25BF%25F8%25C8%25AD%25B0%25A1%25B0%25D1_%25BE%25B8%25B3%25BB.jpg"},
         {"name":"큐큐면관","lat":37.480708,"lng":126.885177,"cat":"중식","dist":"380m","menu":"유니짜장","rate":"-","tel":"0507-1401-5050","addr":"가산퍼블릭","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250515_112%2F1747291137422Qc5l5_JPEG%2FKakaoTalk_20250515_153829476.jpg"},
         {"name":"자연밥상","lat":37.473857,"lng":126.887292,"cat":"밥","dist":"450m","menu":"백반","rate":"86.5","tel":"02-869-4578","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNjAyMTRfOTgg%2FMDAxNzcxMDUwMTk4MTI3.2rPpe5slAAmiyUU6seqPOAD2zMdmbCnRT4fxgcJA99cg.Zo1H3uQ13IZremz8JKwMawaf9XEXHVStQcDQaWRYxtEg.JPEG%2FIMG%25A3%25DF3852.jpg"},
         {"name":"진된장","lat":37.480679,"lng":126.885032,"cat":"찌개","dist":"580m","menu":"된장찌개","rate":"93","tel":"0507-1469-0429","addr":"가산동","isFixed":true,"menuUrl":"https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNjAzMTdfMTM1%2FMDAxNzczNzA1NTUzNzEy.Awo0XZrWwsK6IeccMIk_h8UhUbeVr-MKaDttjtn5DoMg.X9UdFCkGUz5iTdsoqNT5NXdvs3jm2DQ30MCgVw-0P4Qg.JPEG%2Foutput%25A3%25DF2138657272.jpg"}
@@ -212,6 +252,9 @@
     let markers = [];
     let selectedRestData = null;
     let map;
+
+    // --- 줌/드래그 변수 ---
+    let scale = 1, posX = 0, posY = 0, startX = 0, startY = 0, isDragging = false;
 
     window.onload = function() {
         map = new naver.maps.Map('map', { center: new naver.maps.LatLng(37.476742, 126.889731), zoom: 17 });
@@ -261,7 +304,39 @@
             document.getElementById('count-m2').innerText = menuCounts[2];
             document.getElementById('count-m3').innerText = menuCounts[3];
         });
+
+        // --- 줌/드래그 이벤트 리스너 ---
+        const container = document.getElementById('zoom-container');
+        const img = document.getElementById('modal-img');
+
+        container.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            scale = Math.min(Math.max(0.5, scale * delta), 5);
+            updateTransform();
+        });
+
+        container.addEventListener('mousedown', e => {
+            if (scale > 1) {
+                isDragging = true;
+                startX = e.clientX - posX;
+                startY = e.clientY - posY;
+            }
+        });
+        window.addEventListener('mousemove', e => {
+            if (isDragging) {
+                posX = e.clientX - startX;
+                posY = e.clientY - startY;
+                updateTransform();
+            }
+        });
+        window.addEventListener('mouseup', () => isDragging = false);
     };
+
+    function updateTransform() {
+        const img = document.getElementById('modal-img');
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    }
 
     function updateRestUI() {
         const sels = [document.getElementById('menu1'), document.getElementById('menu2'), document.getElementById('menu3')];
@@ -310,10 +385,37 @@
         document.getElementById('res-addr').innerText = r.addr;
         document.getElementById('link-map').href = `https://map.naver.com/v5/search/${encodeURIComponent(r.name)}`;
         
-        // 메뉴판 링크 업데이트 (버튼은 유지)
-        document.getElementById('link-menu').href = r.menuUrl || `https://search.naver.com/search.naver?query=${encodeURIComponent(r.name + ' 메뉴판')}`;
-        
         document.getElementById('btn-delete-rest').style.display = r.isFixed ? 'none' : 'block';
+    }
+
+    /* 메뉴판 팝업 열기 */
+    function openMenuModal() {
+        if (!selectedRestData) return;
+        const modal = document.getElementById('menu-modal');
+        const img = document.getElementById('modal-img');
+        const fallback = document.getElementById('modal-fallback');
+        const title = document.getElementById('modal-title');
+
+        title.innerText = selectedRestData.name + " 메뉴판";
+        
+        // 초기화
+        scale = 1; posX = 0; posY = 0;
+        updateTransform();
+
+        if (selectedRestData.menuUrl && selectedRestData.menuUrl.startsWith('http')) {
+            img.src = selectedRestData.menuUrl;
+            img.style.display = 'block';
+            fallback.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            fallback.style.display = 'block';
+        }
+        modal.style.display = 'block';
+    }
+
+    /* 메뉴판 팝업 닫기 */
+    function closeMenuModal() {
+        document.getElementById('menu-modal').style.display = 'none';
     }
 
     function toggleAdmin() {
@@ -333,7 +435,8 @@
             dist: document.getElementById('add-dist').value || "-",
             rate: document.getElementById('add-rate').value || "-",
             tel: document.getElementById('add-tel').value || "-",
-            addr: document.getElementById('add-addr').value || "-"
+            addr: document.getElementById('add-addr').value || "-",
+            menuUrl: "" 
         };
         db.ref('restaurants').push(newRest);
         alert("등록 완료!");
