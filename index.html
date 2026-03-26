@@ -35,7 +35,7 @@
         .menu-label { color: var(--accent); display: block; font-size: 11px; font-weight: 600; margin-top: 4px; }
         .count-badge { color: var(--primary); font-size: 11px; font-weight: 700; background: #eff6ff; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
 
-        #bottom-info-panel { padding: 24px; background: #fff; border-top: 1px solid var(--border); min-height: 280px; display: none; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 25px rgba(0,0,0,0.05); }
+        #bottom-info-panel { padding: 24px; background: #fff; border-top: 1px solid var(--border); min-height: 220px; display: none; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 25px rgba(0,0,0,0.05); }
         .info-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .info-row { font-size: 13px; margin-bottom: 8px; color: var(--text-sub); display: flex; }
         .info-label { font-weight: 600; color: #94a3b8; width: 80px; flex-shrink: 0; }
@@ -106,6 +106,7 @@
         <div class="info-row"><span class="info-label">상세주소</span> <span id="res-addr">-</span></div>
         <div class="info-btns">
             <a href="#" id="link-map" target="_blank" class="btn-link" style="background: #03C75A;">네이버 지도</a>
+            <a href="#" id="link-menu" target="_blank" class="btn-link" style="background: var(--accent);">메뉴판 보기</a>
             <button onclick="deleteRest()" id="btn-delete-rest" class="btn-link" style="background: var(--danger); display:none;">식당 삭제</button>
         </div>
     </div>
@@ -308,6 +309,9 @@
         document.getElementById('res-tel').innerText = r.tel;
         document.getElementById('res-addr').innerText = r.addr;
         document.getElementById('link-map').href = `https://map.naver.com/v5/search/${encodeURIComponent(r.name)}`;
+        
+        // 메뉴판 링크 업데이트 (버튼은 유지)
+        document.getElementById('link-menu').href = r.menuUrl || `https://search.naver.com/search.naver?query=${encodeURIComponent(r.name + ' 메뉴판')}`;
         
         document.getElementById('btn-delete-rest').style.display = r.isFixed ? 'none' : 'block';
     }
